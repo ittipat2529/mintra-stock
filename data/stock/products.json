@@ -1,0 +1,24 @@
+{
+  "products": [
+    {
+      "sku": "MT-0001",
+      "name": "ฟ็อกกี้",
+      "unit": "ชิ้น",
+      "category": "ของแถม",
+      "reorderPoint": 10,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-15T09:36:53.630Z",
+      "updatedAt": ""
+    }
+  ],
+  "barcodes": [
+    {
+      "barcode": "2000000000015",
+      "sku": "MT-0001",
+      "packQty": 1,
+      "label": ""
+    }
+  ],
+  "updatedAt": "2026-09-15"
+}
