@@ -1232,3 +1232,61 @@ body[data-brand="specialone"]{
 .lb-cell[data-thin=true]{outline:1px solid var(--opex);outline-offset:-1px}
 .lb-thin{font-size:6pt;color:var(--opex);font-weight:600;line-height:1.2}
 @media print{ .lb-thin{display:none} .lb-cell[data-thin=true]{outline:0} }
+
+/* ============================================================
+   กล้องยิงบาร์โค้ด — เต็มจอ เพราะใช้บนมือถือขณะเดินในคลัง
+   มือข้างหนึ่งถือของ อีกข้างถือเครื่อง ปุ่มจึงต้องใหญ่และอยู่ล่าง
+   ============================================================ */
+.cam{
+  position:fixed;inset:0;z-index:90;background:#000;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.cam[hidden]{display:none!important}
+
+/* ภาพกล้องเต็มจอ ครอบให้เต็มไม่ให้มีขอบดำ ผู้ใช้จะเล็งได้ตรงกับที่เห็น */
+.cam-v{width:100%;height:100%;object-fit:cover;background:#000}
+
+/* ห้ามหน้าเลื่อนขณะเปิดกล้อง ไม่งั้นเล็งอยู่แล้วจอไถลหนี */
+body.cam-on{overflow:hidden}
+
+/* กรอบเล็ง — บอกว่าเอาบาร์โค้ดมาไว้ตรงไหน
+   แนวนอนเตี้ย ๆ เพราะบาร์โค้ด 1D กว้างและบาง ไม่ใช่สี่เหลี่ยมจัตุรัสแบบ QR */
+.cam-box{
+  position:absolute;left:8%;right:8%;top:50%;height:132px;transform:translateY(-50%);
+  border:2px solid rgba(255,255,255,.92);border-radius:14px;
+  box-shadow:0 0 0 100vmax rgba(0,0,0,.42);
+  pointer-events:none;
+}
+.cam-box::after{
+  content:"";position:absolute;left:10px;right:10px;top:50%;height:2px;
+  background:rgba(255,80,80,.85);
+}
+
+/* แฟลชขาวสั้น ๆ ตอนยิงติด — ยืนยันด้วยตาเพิ่มจากเสียง
+   ในคลังเสียงดัง คนยิงอาจไม่ได้ยิน bee */
+.cam-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .16s}
+.cam-flash[data-on="true"]{opacity:.55;transition:none}
+
+.cam-bar{
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.34) 70%,transparent);
+}
+.cam-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;color:#fff}
+.cam-t b{font-size:19px;font-weight:700;letter-spacing:.5px;word-break:break-all}
+.cam-t span{font-size:13px;color:rgba(255,255,255,.8)}
+.cam-t span[data-tone="ok"]{color:#6ff0c0}
+.cam-t span[data-tone="err"]{color:#ffb3b3}
+
+.cam .btn{margin:0;width:auto;flex:0 0 auto;min-height:48px;padding:0 20px}
+.cam .btn-ghost{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff}
+.cam .btn-ghost[aria-pressed="true"]{background:#ffd76a;border-color:#ffd76a;color:#1c1300}
+
+/* ปุ่มเปิดกล้องในฟอร์ม — เต็มความกว้างเพราะเป็นทางเลือกหลักบนมือถือ */
+.cam-btn{width:100%;margin-top:10px}
+
+@media (max-width:640px){
+  .cam-box{height:112px;left:5%;right:5%}
+  .cam-t b{font-size:17px}
+}

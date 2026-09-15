@@ -102,6 +102,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg>
         </span>
         <input type="text" id="sQ" autocomplete="off" placeholder="ยิงบาร์โค้ด หรือพิมพ์ชื่อ/รหัสสินค้า">
+        <button type="button" class="iact" id="sQCam" hidden aria-label="ยิงด้วยกล้อง" title="ยิงด้วยกล้องมือถือ">กล้อง</button>
         <span class="live" id="sLive" data-state="off">ยังไม่ต่อ</span>
       </div>
 
@@ -157,6 +158,8 @@
             <div class="field">
               <label class="lbl" for="sCode">บาร์โค้ด</label>
               <input type="text" id="sCode" class="num scan-in" autocomplete="off" placeholder="ยิงได้เลย ไม่ต้องกดช่องก่อน">
+              <button type="button" class="btn btn-ghost cam-btn" id="sCamBtn" hidden>ยิงด้วยกล้องมือถือ</button>
+              <p class="note" id="sCamNote" style="margin-top:7px" hidden></p>
             </div>
 
             <div class="two">
@@ -593,11 +596,27 @@
   </form>
 </dialog>
 
+<!-- ---------- กล้องยิงบาร์โค้ด เต็มจอ ---------- -->
+<div class="cam" id="camWrap" hidden>
+  <video class="cam-v" id="camVideo" playsinline muted></video>
+  <div class="cam-flash" id="camFlash" data-on="false"></div>
+  <div class="cam-box" aria-hidden="true"></div>
+  <div class="cam-bar">
+    <div class="cam-t">
+      <b class="num" id="camHit"></b>
+      <span id="camMsg" data-tone=""></span>
+    </div>
+    <button type="button" class="btn btn-ghost" id="camTorch" aria-pressed="false" hidden>ไฟฉาย</button>
+    <button type="button" class="btn btn-main" id="camClose">ปิดกล้อง</button>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="crypto.js"></script>
 <script src="shell.js"></script>
 <script src="label.js"></script>
+<script src="cam.js"></script>
 <script src="stock.js"></script>
 <script>
 // ลงทะเบียน service worker เพื่อให้หน้าเปิดได้ตอนเน็ตหลุด

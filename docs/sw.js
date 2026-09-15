@@ -8,12 +8,12 @@
  * ถ้าแคชไว้ ฝ่ายขายจะเห็นตัวเลขเก่าโดยไม่รู้ตัว ซึ่งอันตรายกว่าไม่มีตัวเลขเลย
  * คิวการยิงตอนออฟไลน์เก็บใน IndexedDB ที่ฝั่งหน้าเว็บ ไม่ใช่ที่นี่
  */
-var CACHE = "mintra-stock-shell-v1";
+var CACHE = "mintra-stock-shell-v2";
 
 /* เปลือกแอปที่ต้องมีเพื่อให้หน้าเปิดขึ้นได้ ไม่รวมข้อมูล */
 var SHELL = [
   "/", "/index.html",
-  "/styles.css", "/shell.js", "/stock.js", "/label.js", "/crypto.js"
+  "/styles.css", "/shell.js", "/stock.js", "/label.js", "/cam.js", "/crypto.js"
 ];
 
 self.addEventListener("install", function (ev) {

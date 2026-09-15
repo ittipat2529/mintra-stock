@@ -542,6 +542,38 @@
     }
   }
 
+  /* ================= ยิงด้วยกล้องมือถือ =================
+   * ตัวอ่านจริงอยู่ใน cam.js ที่นี่แค่ต่อสายว่ารหัสที่ได้จะไปเข้าทางไหน
+   * รหัสจากกล้องเดินทางเส้นเดียวกับรหัสจากเครื่องยิง USB เป๊ะ ๆ
+   * ทั้งการกันยิงซ้ำด้วย scanId คิวออฟไลน์ และกล่องผูกบาร์โค้ดที่ไม่รู้จัก
+   */
+
+  function camOk() { return !!(window.StockCam && window.StockCam.supported()); }
+
+  function paintCam() {
+    var ok = camOk();
+    var why = (window.StockCam && window.StockCam.why && window.StockCam.why()) || "";
+
+    var b = $("sCamBtn");
+    if (b) b.hidden = !ok;
+    var n = $("sCamNote");
+    if (n) {
+      // เครื่องที่ใช้ไม่ได้ต้องได้คำอธิบาย ไม่ใช่ปุ่มที่หายไปเงียบ ๆ
+      n.hidden = ok || !why;
+      n.textContent = ok ? "" : why;
+    }
+    var q = $("sQCam");
+    if (q) q.hidden = !ok;
+    var cb = $("scCamBtn");
+    if (cb) cb.hidden = !ok;
+  }
+
+  /** เปิดกล้องแล้วส่งรหัสที่อ่านได้เข้าฟังก์ชันเดิม ไม่มีเส้นทางพิเศษของกล้อง */
+  function camOpen(handler) {
+    if (!camOk()) { A.toast(window.StockCam ? window.StockCam.why() : "เครื่องนี้ใช้กล้องยิงไม่ได้"); return; }
+    window.StockCam.open(handler);
+  }
+
   function focusCode() {
     var el = $("sCode");
     if (el && st.pane === "scan" && isActive()) el.focus();
@@ -666,6 +698,11 @@
   /* ---------- บาร์โค้ดที่ไม่รู้จัก ---------- */
 
   function openBarcodeDialog(code, units) {
+    // กล่องนี้เป็น <dialog> แบบ modal ซึ่งอยู่ใน top layer — ทับหน้ากล้องเสมอ
+    // ถ้าปล่อยกล้องถ่ายอยู่ข้างหลัง มันจะยิงรหัสเดิมเข้ามาเรื่อย ๆ ตอนคนกำลังกรอกฟอร์ม
+    // และปุ่มปิดกล้องก็ถูกกล่องทับจนกดไม่ได้ ถึงตรงนี้กล้องทำงานของมันจบแล้ว
+    if (window.StockCam && window.StockCam.isOpen()) window.StockCam.close();
+
     st.bc = { code: code, units: units };
     $("sBcVal").textContent = code;
     $("sBcSku").value = "";
@@ -1365,7 +1402,8 @@
       + '<div class="cols">'
       + '<div class="card form-col"><h2>ยิงนับ</h2><div class="body">'
       +   '<div class="field" style="margin-top:0"><label class="lbl" for="scBar">บาร์โค้ด</label>'
-      +     '<input type="text" id="scBar" class="num scan-in" autocomplete="off" placeholder="ยิงได้เลย ยิงซ้ำตัวเดิมระบบบวกให้"></div>'
+      +     '<input type="text" id="scBar" class="num scan-in" autocomplete="off" placeholder="ยิงได้เลย ยิงซ้ำตัวเดิมระบบบวกให้">'
+      +     '<button type="button" class="btn btn-ghost cam-btn" id="scCamBtn" hidden>ยิงด้วยกล้องมือถือ</button></div>'
       +   '<div class="field"><label class="lbl" for="scUnits">ยิงครั้งละ</label>'
       +     '<input type="number" id="scUnits" class="num" min="1" step="1" value="1"></div>'
       +   '<div class="calc"><span>ยิงนับไปแล้ว</span><b class="num">' + n0(t.countedLines) + " ตัว</b></div>"
@@ -1394,6 +1432,7 @@
 
     var bar = $("scBar");
     if (bar) bar.focus();
+    paintCam();
   }
 
   function kpi(label, val, tone, raw) {
@@ -1900,6 +1939,8 @@
 
   function setPane(id) {
     if (!panes().some(function (x) { return x.id === id; })) id = "browse";
+    // ย้ายแท็บแล้วกล้องต้องดับ ไม่ใช่ค้างถ่ายอยู่เบื้องหลังกินแบตทิ้ง
+    if (window.StockCam && window.StockCam.isOpen()) window.StockCam.close();
     st.pane = id;
     $("sBrowse").hidden = id !== "browse";
     $("sScan").hidden = id !== "scan";
@@ -1914,6 +1955,7 @@
     clearInterval(st.boardTimer);
     st.boardTimer = null;
 
+    paintCam();
     if (id === "browse") { renderBrowse(); loadAlerts(true); loadMine(); }
     if (id === "scan") { setMode(st.mode); loadPending(); paintTransfer(); }
     if (id === "wall") {
@@ -2038,6 +2080,32 @@
   $("sModeBar").addEventListener("click", function (ev) {
     var b = ev.target.closest("button[data-mode]");
     if (b) setMode(b.getAttribute("data-mode"));
+  });
+
+  $("sCamBtn").addEventListener("click", function () { camOpen(submitScan); });
+
+  $("sQCam").addEventListener("click", function () {
+    // ฝ่ายขายส่องของในมือลูกค้า — เปิดตัวนั้นให้ดูเลย ไม่ใช่แค่เติมช่องค้นหา
+    camOpen(function (code) {
+      var bc = st.byBarcode[code];
+      if (bc && st.bySku[bc.sku]) {
+        st.selected = bc.sku;
+        st.q = "";
+        $("sQ").value = "";
+        renderBrowse();
+        beep("ok");
+      } else {
+        // ไม่รู้จักก็ยังบอกรหัสไว้ในช่อง ให้หัวหน้าเอาไปผูกต่อได้
+        st.q = code;
+        $("sQ").value = code;
+        renderBrowse();
+        beep("unknown");
+      }
+    });
+  });
+
+  $("sCountBody").addEventListener("click", function (ev) {
+    if (ev.target.closest("#scCamBtn")) camOpen(countScan);
   });
 
   $("sCode").addEventListener("keydown", function (ev) {
