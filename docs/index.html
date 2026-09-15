@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>สต็อกสินค้า</title>
+<meta name="description" content="ระบบสต็อกสินค้ายิงบาร์โค้ดแบบเรียลไทม์ ทุกฝ่ายเห็นยอดเดียวกัน">
+<link rel="icon" href="assets/logo.webp">
+<link rel="apple-touch-icon" href="assets/logo.webp">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#00a97c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ---------- หน้าเข้าสู่ระบบ ---------- -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <img class="gate-logo" src="assets/logo.webp" alt="" data-logo width="300" height="300">
+    <div class="co" data-company></div>
+    <h1 class="display">สต็อก<span class="em">สินค้า</span></h1>
+
+    <!-- ตั้งค่าครั้งแรก แสดงเฉพาะตอนยังไม่มีบัญชีใดในระบบ -->
+    <form class="tok" id="setupForm" hidden>
+      <p class="gate-lede">ยังไม่มีบัญชีในระบบสต็อก สร้างบัญชีเจ้าของเป็นคนแรก</p>
+      <div class="field" style="margin-top:0">
+        <label class="lbl" for="suUser">ชื่อผู้ใช้</label>
+        <input type="text" id="suUser" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="เช่น apisit">
+      </div>
+      <div class="field">
+        <label class="lbl" for="suName">ชื่อที่แสดง</label>
+        <input type="text" id="suName" autocomplete="name" placeholder="เช่น อภิสิทธิ์">
+      </div>
+      <div class="field">
+        <label class="lbl" for="suPass">รหัสผ่าน (อย่างน้อย 8 ตัว)</label>
+        <input type="password" id="suPass" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label class="lbl" for="suPass2">พิมพ์รหัสผ่านอีกครั้ง</label>
+        <input type="password" id="suPass2" autocomplete="new-password">
+      </div>
+      <button type="submit" class="btn btn-main" id="suBtn" style="margin-top:14px">สร้างบัญชีเจ้าของ</button>
+    </form>
+
+    <!-- เข้าสู่ระบบปกติ -->
+    <form class="tok" id="loginForm" hidden>
+      <p class="gate-lede">บัญชีของระบบสต็อกเป็นคนละชุดกับสมุดบัญชีรายรับรายจ่าย</p>
+      <div class="field" style="margin-top:0">
+        <label class="lbl" for="liUser">ชื่อผู้ใช้</label>
+        <input type="text" id="liUser" autocomplete="username" autocapitalize="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label class="lbl" for="liPass">รหัสผ่าน</label>
+        <input type="password" id="liPass" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-main" id="liBtn" style="margin-top:14px">เข้าสู่ระบบ</button>
+    </form>
+
+    <p class="gate-msg" id="gateMsg" role="status" aria-live="polite">กำลังเชื่อมต่อ…</p>
+  </div>
+</div>
+
+<!-- ---------- แอปหลัก ---------- -->
+<div class="wrap" id="app" hidden>
+  <header class="mast">
+    <div class="brand">
+      <img class="logo" src="assets/logo.webp" alt="" data-logo width="300" height="300">
+      <div>
+        <div class="co" data-company></div>
+        <h1>สต็อก<span class="em">สินค้า</span></h1>
+        <p>ยิงบาร์โค้ดตอนรับเข้าและตอนแพ็คส่ง ยอดขึ้นทุกจอทันที — ฝ่ายขายเปิดหน้านี้แล้วตอบลูกค้าได้เลยว่าของยังมีอีกไหม</p>
+      </div>
+    </div>
+    <div class="spacer"></div>
+
+    <div class="who" id="who">
+      <img class="avatar" id="whoPic" alt="" width="72" height="72">
+      <div class="who-t">
+        <span class="who-name" id="whoName"></span>
+        <span class="badge" id="whoRole"></span>
+      </div>
+      <button type="button" class="btn btn-ghost" id="teamBtn" hidden>จัดการทีม</button>
+      <button type="button" class="btn btn-ghost" id="pwBtn">เปลี่ยนรหัสผ่าน</button>
+      <button type="button" class="btn btn-ghost" id="signOutBtn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div id="viewStock">
+    <nav class="wsel" id="sSel" aria-label="เลือกหน้าจอสต็อก"></nav>
+    <div class="banner" id="sConn" hidden></div>
+    <div class="banner" id="sQueue" hidden></div>
+
+    <!-- ---------- ดูสต็อก ทุกฝ่ายเห็นเหมือนกัน ---------- -->
+    <div id="sBrowse">
+      <div class="scan-bar">
+        <span class="scan-ic" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5 21 21"></path></svg>
+        </span>
+        <input type="text" id="sQ" autocomplete="off" placeholder="ยิงบาร์โค้ด หรือพิมพ์ชื่อ/รหัสสินค้า">
+        <span class="live" id="sLive" data-state="off">ยังไม่ต่อ</span>
+      </div>
+
+      <section class="due" id="sAlerts" hidden></section>
+
+      <div class="cols">
+        <div style="display:grid;gap:20px;min-width:0">
+          <div class="card">
+            <h2>สินค้า <span class="note" id="sCountNote"></span></h2>
+            <div id="sList"></div>
+          </div>
+          <div class="card" id="sMineCard" hidden>
+            <h2>การจองของฉัน <span class="note" id="sMineNote"></span></h2>
+            <div id="sMine"></div>
+          </div>
+        </div>
+        <div id="sDetail" style="min-width:0"></div>
+      </div>
+    </div>
+
+    <!-- ---------- ยิงสต็อก ---------- -->
+    <div id="sScan" hidden>
+      <div class="smode" id="sModeBar" data-mode="issue">
+        <div class="sm-l">
+          <b class="display" id="sModeName">แพ็คส่ง</b>
+          <span id="sModeSub">ตัดของออกจากคลัง</span>
+        </div>
+        <div class="seg seg3 sm-tabs" role="group" aria-label="โหมดยิง">
+          <button type="button" data-mode="receive" aria-pressed="false">รับเข้า</button>
+          <button type="button" data-mode="issue" aria-pressed="true">แพ็คส่ง</button>
+          <button type="button" data-mode="return_in" aria-pressed="false">รับคืน</button>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="card form-col">
+          <h2>ยิงบาร์โค้ด</h2>
+          <div class="body">
+            <div class="field" style="margin-top:0">
+              <label class="lbl" for="sRef" id="sRefLab">เลขออเดอร์</label>
+              <input type="text" id="sRef" autocomplete="off" placeholder="เช่น KRY-88213">
+            </div>
+
+            <div class="field" id="sReasonWrap" hidden>
+              <label class="lbl">เหตุผลที่คืน — บังคับเลือก เพราะเป็นตัวกำหนดว่าของเข้าคลังไหน</label>
+              <div class="bucket" id="sReasons"></div>
+              <div class="field" id="sNoteWrap" hidden>
+                <label class="lbl" for="sNote">หมายเหตุ</label>
+                <input type="text" id="sNote" autocomplete="off" placeholder="เขียนสั้น ๆ ว่าคืนเพราะอะไร">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="lbl" for="sCode">บาร์โค้ด</label>
+              <input type="text" id="sCode" class="num scan-in" autocomplete="off" placeholder="ยิงได้เลย ไม่ต้องกดช่องก่อน">
+            </div>
+
+            <div class="two">
+              <div class="field" style="margin-top:0">
+                <label class="lbl" for="sUnits">ยิงครั้งละ</label>
+                <input type="number" id="sUnits" class="num" min="1" max="5000" step="1" value="1">
+              </div>
+              <div class="field" style="margin-top:0">
+                <label class="lbl" for="sLoc">คลัง</label>
+                <select id="sLoc"></select>
+              </div>
+            </div>
+
+            <div class="calc"><span>ยิงไปแล้วรอบนี้</span><b class="num" id="sTally">0</b></div>
+            <p class="note" id="sScanHint" style="margin-top:9px"></p>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:20px;min-width:0">
+          <div class="card">
+            <h2>เมื่อกี้ <span class="note">ยิงซ้ำใบเดิมระบบไม่นับเพิ่ม</span></h2>
+            <div id="sRecent"></div>
+          </div>
+          <div class="card" id="sPendCard" hidden>
+            <h2>รอผูกบาร์โค้ด <span class="note" id="sPendNote"></span></h2>
+            <div class="tablewrap" id="sPend"></div>
+          </div>
+          <div class="card" id="sTfCard" hidden>
+            <h2>ย้ายคลัง</h2>
+            <div class="body">
+              <p class="note" style="margin:0 0 13px">ไม่ใช่รับเข้าและไม่ใช่แพ็คส่ง ของทั้งบริษัทไม่ขยับ
+              ขยับแค่ว่าอยู่ที่ไหน — แนวคิดเดียวกับปุ่มโอนระหว่างกระเป๋าเงิน</p>
+              <div class="field" style="margin-top:0">
+                <label class="lbl" for="stfSku">สินค้า (ยิงบาร์โค้ด หรือพิมพ์ชื่อ/SKU)</label>
+                <input type="text" id="stfSku" autocomplete="off">
+                <div id="stfHits" class="bc-hits"></div>
+              </div>
+              <div class="two">
+                <div class="field">
+                  <label class="lbl" for="stfFrom">จากคลัง</label>
+                  <select id="stfFrom"></select>
+                </div>
+                <div class="field">
+                  <label class="lbl" for="stfTo">ไปคลัง</label>
+                  <select id="stfTo"></select>
+                </div>
+              </div>
+              <div class="field">
+                <label class="lbl" for="stfQty">จำนวน</label>
+                <input type="number" id="stfQty" class="num" min="1" step="1" value="1">
+              </div>
+              <button type="button" class="btn btn-main" id="stfGo">ย้ายคลัง</button>
+              <p class="note" id="stfNow" style="margin-top:9px"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- จอติดผนังคลัง ทีวีเครื่องเดียว ไม่มีใครต้องกดอะไร ---------- -->
+    <div id="sWall" hidden>
+      <div class="wall" id="sWallIn"></div>
+    </div>
+
+
+    <!-- ---------- นับสต็อก ---------- -->
+    <div id="sCount" hidden>
+      <div id="sCountHead"></div>
+      <div id="sCountBody"></div>
+    </div>
+
+    <!-- ---------- ต้นทุนและมูลค่า หัวหน้าคลังขึ้นไป ---------- -->
+    <div id="sCost" hidden>
+      <div class="chain" id="svKpi"></div>
+      <section class="cash" id="svHero"></section>
+
+      <div class="cols">
+        <div style="display:grid;gap:20px;min-width:0">
+          <div class="card">
+            <h2>รับเข้ารอใส่ต้นทุน <span class="note" id="sRcNote"></span></h2>
+            <div class="tablewrap" id="sRcTable"></div>
+            <div class="tools">
+              <span class="note">คลังยิงแต่จำนวน ต้นทุนหัวหน้าใส่จากบิลตัวจริง คนแพ็คของจึงไม่เห็นต้นทุน</span>
+            </div>
+          </div>
+          <div class="card">
+            <h2>ของไม่ขยับเกิน 60 วัน <span class="note" id="sDeadNote"></span></h2>
+            <div class="tablewrap" id="sDeadTable"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:20px;min-width:0">
+          <div class="card">
+            <h2>ปรับยอดเอง</h2>
+            <div class="body">
+              <div class="banner" style="margin:0 0 15px">สิทธิ์ปรับยอดแบบไม่จำกัดคือช่องกลบของหาย ทุกครั้งที่ปรับจะขึ้นประวัติให้เจ้าของเห็น</div>
+              <div class="field" style="margin-top:0">
+                <label class="lbl" for="sajSku">สินค้า (พิมพ์ชื่อหรือ SKU)</label>
+                <input type="text" id="sajSku" autocomplete="off">
+                <div id="sajHits" class="bc-hits"></div>
+              </div>
+              <div class="two">
+                <div class="field">
+                  <label class="lbl" for="sajLoc">คลัง</label>
+                  <select id="sajLoc"></select>
+                </div>
+                <div class="field">
+                  <label class="lbl" for="sajTarget">ยอดที่ถูกต้อง</label>
+                  <input type="number" id="sajTarget" class="num" step="1">
+                </div>
+              </div>
+              <div class="field">
+                <label class="lbl" for="sajReason">เหตุผล — บังคับเลือก</label>
+                <select id="sajReason"></select>
+              </div>
+              <div class="field">
+                <label class="lbl" for="sajNote">หมายเหตุ</label>
+                <input type="text" id="sajNote" autocomplete="off">
+              </div>
+              <button type="button" class="btn btn-main" id="sajSave">ปรับยอด</button>
+              <p class="note" id="sajNow" style="margin-top:9px"></p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>ประวัติการปรับยอด <span class="note">7 วันย้อนหลัง</span></h2>
+            <div class="tablewrap" id="sAdjTable"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ---------- พิมพ์ฉลากบาร์โค้ด หัวหน้าคลังขึ้นไป ---------- -->
+    <div id="sLabel" hidden>
+      <div class="cols">
+        <div class="card form-col">
+          <h2>พิมพ์ฉลาก</h2>
+          <div class="body">
+            <div class="field" style="margin-top:0">
+              <label class="lbl" for="slLayout">กระดาษสติกเกอร์</label>
+              <select id="slLayout"></select>
+            </div>
+            <div class="bucket">
+              <label class="bopt" id="slUseBcOpt">
+                <input type="radio" name="slSrc" value="barcode" checked>
+                <span><span class="t">ใช้บาร์โค้ดที่ผูกไว้แล้ว</span>
+                <span class="d">ถ้าตัวไหนยังไม่มีบาร์โค้ด จะใช้รหัส SKU แทนให้</span></span>
+              </label>
+              <label class="bopt">
+                <input type="radio" name="slSrc" value="sku">
+                <span><span class="t">ใช้รหัส SKU เสมอ</span>
+                <span class="d">เหมาะกับของที่จะติดฉลากของบริษัททับของเดิม</span></span>
+              </label>
+            </div>
+            <div class="field">
+              <label class="lbl" for="slCopies">จำนวนดวงต่อสินค้า</label>
+              <input type="number" id="slCopies" class="num" min="1" max="500" step="1" value="1">
+            </div>
+            <div class="tools" style="border-top:0;padding:0;margin-top:15px">
+              <button type="button" class="btn btn-ghost" id="slAll">เลือกทั้งหมด</button>
+              <button type="button" class="btn btn-ghost" id="slNone">ไม่เลือกเลย</button>
+              <button type="button" class="btn btn-ghost" id="slNoBc">เฉพาะตัวที่ยังไม่มีบาร์โค้ด</button>
+            </div>
+            <button type="button" class="btn btn-main" id="slPrint">พิมพ์</button>
+            <p class="note" id="slNote" style="margin-top:9px"></p>
+            <p class="note" style="margin-top:11px">พิมพ์ที่ขนาดจริง 100% ห้ามย่อขยาย และตรวจว่าขอบขาวสองข้างบาร์โค้ดไม่ถูกตัด
+            ไม่งั้นเครื่องยิงอ่านไม่ได้ · ลองยิงดวงแรกก่อนพิมพ์ทั้งแผ่น</p>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:20px;min-width:0">
+          <div class="card">
+            <h2>เลือกสินค้า <span class="note" id="slPick"></span></h2>
+            <div class="tablewrap" id="slTable"></div>
+          </div>
+          <div class="card">
+            <h2>ตัวอย่างก่อนพิมพ์</h2>
+            <div class="body" id="slSheetWrap"><div id="slSheet"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ---------- ทะเบียนสินค้า หัวหน้าคลังขึ้นไป ---------- -->
+    <div id="sProducts" hidden>
+      <div class="cols">
+        <div class="card form-col">
+          <h2 id="sPfTitle">เพิ่มสินค้า</h2>
+          <div class="body">
+            <div class="field" style="margin-top:0">
+              <label class="lbl" for="sfSku">รหัสสินค้า (SKU)</label>
+              <input type="text" id="sfSku" class="num" autocomplete="off" placeholder="MTL-30">
+            </div>
+            <div class="field">
+              <label class="lbl" for="sfName">ชื่อสินค้า</label>
+              <input type="text" id="sfName" autocomplete="off">
+            </div>
+            <div class="two">
+              <div class="field">
+                <label class="lbl" for="sfUnit">หน่วย</label>
+                <input type="text" id="sfUnit" autocomplete="off" placeholder="ชิ้น">
+              </div>
+              <div class="field">
+                <label class="lbl" for="sfCat">หมวด</label>
+                <input type="text" id="sfCat" autocomplete="off">
+              </div>
+            </div>
+            <div class="field">
+              <label class="lbl" for="sfRop">จุดสั่งซื้อ — ต่ำกว่านี้ถือว่าใกล้หมด</label>
+              <input type="number" id="sfRop" class="num" min="0" step="1" value="0">
+            </div>
+            <label class="remember" style="margin-top:13px">
+              <input type="checkbox" id="sfActive" checked> ยังขายอยู่
+            </label>
+            <button type="button" class="btn btn-main" id="sfSave">บันทึกสินค้า</button>
+            <button type="button" class="btn btn-ghost" id="sfCancel" style="width:100%;margin-top:9px">ล้างฟอร์ม</button>
+
+            <div class="gate-help" style="margin-top:20px">
+              <details>
+                <summary>ผูกบาร์โค้ดกับสินค้า</summary>
+                <div class="field">
+                  <label class="lbl" for="sbCode">บาร์โค้ด</label>
+                  <input type="text" id="sbCode" class="num" autocomplete="off">
+                </div>
+                <div class="two">
+                  <div class="field">
+                    <label class="lbl" for="sbSku">ผูกกับ SKU</label>
+                    <input type="text" id="sbSku" class="num" autocomplete="off">
+                  </div>
+                  <div class="field">
+                    <label class="lbl" for="sbQty">ยิงครั้งนี้ได้กี่ชิ้น</label>
+                    <input type="number" id="sbQty" class="num" min="1" step="1" value="1">
+                  </div>
+                </div>
+                <button type="button" class="btn btn-ghost" id="sbSave" style="width:100%;margin-top:13px">ผูกบาร์โค้ด</button>
+                <p class="note" style="margin-top:9px">ยิงลังได้ 12 ชิ้นก็ใส่ 12 — บาร์โค้ดหนึ่งผูกได้กับสินค้าตัวเดียว</p>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:20px;min-width:0">
+          <div class="card">
+            <h2>ทะเบียนสินค้า <span class="note" id="sPTotal"></span></h2>
+            <div class="tablewrap" id="sPTable"></div>
+          </div>
+          <div class="card">
+            <h2>คลังสินค้า <span class="note" id="sLocNote"></span></h2>
+            <div class="tablewrap" id="sLocTable"></div>
+            <div class="body" style="border-top:1px solid var(--line)">
+              <div class="two">
+                <div class="field" style="margin-top:0">
+                  <label class="lbl" for="slcId">รหัสคลัง (a-z 0-9)</label>
+                  <input type="text" id="slcId" class="num" autocomplete="off" placeholder="branch2">
+                </div>
+                <div class="field" style="margin-top:0">
+                  <label class="lbl" for="slcName">ชื่อคลัง</label>
+                  <input type="text" id="slcName" autocomplete="off" placeholder="คลังสาขาสอง">
+                </div>
+              </div>
+              <div class="bucket">
+                <label class="bopt">
+                  <input type="radio" name="slcType" value="sellable" checked>
+                  <span><span class="t">กองที่ขายได้</span><span class="d">ของในกองนี้ถูกนับเป็น <b>พร้อมขาย</b></span></span>
+                </label>
+                <label class="bopt">
+                  <input type="radio" name="slcType" value="blocked">
+                  <span><span class="t">กองที่ขายไม่ได้</span><span class="d">เช่นของเสียหาย ของรอตรวจ — <b>ไม่ถูกนับเป็นพร้อมขาย</b></span></span>
+                </label>
+              </div>
+              <button type="button" class="btn btn-ghost" id="slcSave" style="width:100%;margin-top:15px">บันทึกคลัง</button>
+              <p class="note" id="slcNote" style="margin-top:9px"></p>
+            </div>
+          </div>
+          <div class="card" id="sImportCard" hidden>
+            <h2>นำเข้าสินค้าจาก CSV</h2>
+            <div class="body">
+              <p class="note" style="margin:0 0 11px">หัวตาราง <code>sku,name,unit,category,reorderPoint,barcode,packQty</code> — ยิงซ้ำได้ ของเดิมถูกอัปเดตทับ ไม่สร้างซ้ำ</p>
+              <input type="file" id="sImportFile" accept=".csv,text/csv">
+              <p class="note" id="sImportNote" style="margin-top:11px"></p>
+            </div>
+          </div>
+          <div class="card">
+            <h2>ค่าตั้งและเครื่องมือ</h2>
+            <div class="body">
+              <div class="two">
+                <div class="field" style="margin-top:0">
+                  <label class="lbl" for="sResHours">การจองหมดอายุในกี่ชั่วโมง</label>
+                  <input type="number" id="sResHours" class="num" min="1" max="720" step="1" value="24">
+                </div>
+                <div class="field" style="margin-top:0;display:flex;align-items:flex-end">
+                  <button type="button" class="btn btn-ghost" id="sResSave" style="width:100%">บันทึกค่าตั้ง</button>
+                </div>
+              </div>
+              <p class="note" style="margin-top:9px">การจองที่ค้างคือสต็อกที่ขายไม่ได้ทั้งที่ของอยู่บนชั้น ระบบจะปล่อยคืนเองเมื่อครบเวลา</p>
+            </div>
+            <div class="tools">
+              <button type="button" class="btn btn-ghost" id="sSweep">ปล่อยของจากการจองที่หมดอายุ</button>
+              <button type="button" class="btn btn-ghost" id="sRebuild">สร้างยอดใหม่จากประวัติ</button>
+              <button type="button" class="btn btn-ghost" id="sArchive">เก็บประวัติลงรีโปเดี๋ยวนี้</button>
+              <span class="spacer"></span>
+              <span class="note" id="sToolNote"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /viewStock -->
+
+  <!-- ---------- จัดการทีม เจ้าของเท่านั้น ---------- -->
+  <div class="card owner-only" id="teamCard" hidden style="margin-top:20px">
+    <h2>จัดการทีม</h2>
+    <div class="body">
+      <label class="lbl" for="mUser">เพิ่มผู้ใช้ · เปลี่ยนระดับ · ตั้งรหัสใหม่ให้</label>
+      <div class="field" style="margin-top:0">
+        <input type="text" id="mUser" autocapitalize="off" spellcheck="false" placeholder="ชื่อผู้ใช้ เช่น somchai">
+      </div>
+      <div class="field">
+        <input type="text" id="mName" maxlength="60" placeholder="ชื่อที่แสดง เช่น ส้ม คลังหลัง">
+      </div>
+      <div class="field">
+        <input type="text" id="mPass" autocomplete="off" spellcheck="false" placeholder="รหัสผ่านชั่วคราว อย่างน้อย 8 ตัว">
+      </div>
+      <div class="field">
+        <select id="mRole">
+          <option value="warehouse">คลัง — ยิงรับเข้า/แพ็คส่ง/รับคืน ย้ายคลัง นับสต็อก</option>
+          <option value="sales">ฝ่ายขาย — ดูยอดและจองของ ยิงสต็อกไม่ได้</option>
+          <option value="manager">หัวหน้าคลัง — ทะเบียนสินค้า ต้นทุน ปรับยอด ปิดรอบนับ</option>
+          <option value="readonly">ดูอย่างเดียว — เห็นยอด แตะอะไรไม่ได้</option>
+          <option value="owner">เจ้าของ — ทำได้ทุกอย่าง รวมถึงจัดการทีม</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-main" id="mAddBtn" style="margin-top:13px">บันทึกผู้ใช้</button>
+      <p class="note" style="margin-top:9px" id="mHint">บอกรหัสชั่วคราวให้เขา ระบบจะบังคับให้ตั้งรหัสใหม่ตอนเข้าครั้งแรก</p>
+      <button type="button" class="btn btn-ghost" id="mClear" style="width:100%;margin-top:8px" hidden>ล้างฟอร์ม</button>
+
+      <div class="members" id="members"></div>
+
+      <div class="lockbox">
+        <b style="font-size:13.5px">เก็บประวัติลงรีโปเดี๋ยวนี้</b>
+        <p class="note" style="margin-top:8px">ปกติระบบเก็บเองทุกคืน 23:55 · ปุ่มนี้ไว้ตรวจว่าตั้งค่าถูกแล้ว</p>
+        <button type="button" class="btn btn-ghost" id="arcBtn" style="margin-top:10px">เก็บประวัติของวันนี้</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- กล่องเปลี่ยนรหัสผ่าน ---------- -->
+<dialog id="pwDlg" class="dlg">
+  <form method="dialog" class="dlg-in">
+    <h2 class="display">เปลี่ยนรหัสผ่าน</h2>
+    <p class="note" id="pwNote" style="margin:0 0 4px"></p>
+    <div class="field">
+      <label class="lbl" for="pwCur">รหัสผ่านปัจจุบัน</label>
+      <input type="password" id="pwCur" autocomplete="current-password">
+    </div>
+    <div class="field">
+      <label class="lbl" for="pwNew">รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</label>
+      <input type="password" id="pwNew" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label class="lbl" for="pwNew2">พิมพ์รหัสผ่านใหม่อีกครั้ง</label>
+      <input type="password" id="pwNew2" autocomplete="new-password">
+    </div>
+    <div class="dlg-act">
+      <button type="button" class="btn btn-ghost" id="pwCancel">ยกเลิก</button>
+      <button type="button" class="btn btn-main" id="pwSave" style="margin:0;width:auto">บันทึกรหัสใหม่</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="sBcDlg" class="dlg">
+  <form method="dialog" class="dlg-in">
+    <h2 class="display">บาร์โค้ดนี้ยังไม่มีในระบบ</h2>
+    <p class="num" id="sBcVal" style="font-size:17px;font-weight:600;margin:0 0 4px"></p>
+    <p class="note" style="margin:0 0 16px">งานคลังต้องเดินต่อได้เสมอ — ข้อมูลไม่ครบแก้ทีหลังได้ ของค้างหน้าโกดังแก้ทีหลังไม่ได้</p>
+
+    <div id="sBcBind">
+      <div class="field" style="margin-top:0">
+        <label class="lbl" for="sBcSku">ผูกกับสินค้า (พิมพ์ชื่อหรือ SKU)</label>
+        <input type="text" id="sBcSku" autocomplete="off">
+        <div id="sBcHits" class="bc-hits"></div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="sBcQty">ยิงบาร์โค้ดนี้ครั้งหนึ่งได้กี่ชิ้น</label>
+        <input type="number" id="sBcQty" class="num" min="1" step="1" value="1">
+      </div>
+      <button type="button" class="btn btn-main" id="sBcSave">ผูกแล้วยิงต่อ</button>
+    </div>
+
+    <p class="note" id="sBcNoPerm" hidden style="margin:0">บัญชีนี้ผูกบาร์โค้ดไม่ได้ — กด "ข้ามไว้ก่อน" แล้วให้หัวหน้าเคลียร์ให้ตอนเย็น</p>
+
+    <div class="dlg-act">
+      <button type="button" class="btn btn-ghost" id="sBcClose">ปิด</button>
+      <button type="button" class="btn btn-main" id="sBcSkip" style="margin:0;width:auto">ข้ามไว้ก่อน ยิงต่อเลย</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="sRcDlg" class="dlg">
+  <form method="dialog" class="dlg-in">
+    <h2 class="display">บิลรับเข้า <span class="num" id="sRcRef"></span></h2>
+    <p class="note" style="margin:0 0 14px">ใส่ต้นทุนต่อหน่วยตามบิลตัวจริง ระบบจะคิดต้นทุนถัวเฉลี่ยใหม่ให้เอง</p>
+    <div class="tablewrap" id="sRcLines"></div>
+
+    <div class="calc"><span>ยอดบิลรวม</span><b class="num" id="sRcAmt">0.00</b></div>
+    <button type="button" class="btn btn-ghost" id="sRcSaveCost" style="width:100%;margin-top:13px">บันทึกต้นทุน</button>
+
+    <p class="note" style="margin-top:14px">ต้นทุนที่ใส่ที่นี่ใช้คิดมูลค่าสต็อกในระบบนี้เท่านั้น
+      ระบบสต็อกไม่ลงบัญชีให้ใคร — รายการซื้อสินค้าให้ลงในสมุดรายรับรายจ่ายตามปกติ</p>
+
+    <div class="dlg-act">
+      <button type="button" class="btn btn-ghost" id="sRcClose">ปิด</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="crypto.js"></script>
+<script src="shell.js"></script>
+<script src="label.js"></script>
+<script src="stock.js"></script>
+<script>
+// ลงทะเบียน service worker เพื่อให้หน้าเปิดได้ตอนเน็ตหลุด
+// ล้มก็ไม่กระทบอะไร แอปยังทำงานปกติแค่เปิดออฟไลน์ไม่ได้
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>

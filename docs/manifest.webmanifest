@@ -1,0 +1,16 @@
+{
+  "name": "สต็อกสินค้า",
+  "short_name": "สต็อก",
+  "description": "ยิงบาร์โค้ดรับเข้า แพ็คส่ง รับคืน และนับสต็อก ใช้งานได้แม้เน็ตหลุด",
+  "start_url": "/?pwa=1",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef6f2",
+  "theme_color": "#00a97c",
+  "lang": "th",
+  "icons": [
+    { "src": "assets/logo.webp", "sizes": "192x192", "type": "image/webp", "purpose": "any" },
+    { "src": "assets/logo.webp", "sizes": "512x512", "type": "image/webp", "purpose": "any" }
+  ]
+}

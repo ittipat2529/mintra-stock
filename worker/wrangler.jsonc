@@ -1,0 +1,53 @@
+/**
+ * ระบบสต็อกสินค้า — แยกขาดจากสมุดบัญชีรายรับรายจ่าย
+ *
+ * Worker ตัวนี้ไม่มี token ของรีโปบัญชี และรีโปบัญชีก็ไม่รู้จัก Worker ตัวนี้
+ * ถึงจะตั้งค่าผิดก็ยังเขียนข้ามระบบกันไม่ได้
+ *
+ *   npx wrangler deploy      → ขึ้นระบบสต็อกของมินตรา
+ *
+ * ชื่อ Worker คือชื่อที่ขึ้นหน้า URL และ secret ผูกกับชื่อนี้
+ * เปลี่ยนชื่อเมื่อไร ต้องใส่ secret ใหม่ทั้งหมด
+ *
+ *   npx wrangler secret put GITHUB_TOKEN     token ที่เขียนรีโปสต็อกนี้ได้
+ *   npx wrangler secret put SESSION_SECRET   ข้อความสุ่มยาว ๆ ใช้เซ็น session
+ *
+ * เพิ่มบริษัทที่สอง — เพิ่มบล็อกใน "env" ให้ครบทั้งสี่อย่างนี้
+ * (environment ที่ตั้งชื่อไว้ "ไม่สืบทอด" อะไรจากด้านบนเลย)
+ *   name, vars, durable_objects, triggers
+ * แล้วใส่ secret แยกอีกชุดด้วย  npx wrangler secret put GITHUB_TOKEN -e <ชื่อ>
+ */
+{
+  "name": "mintra-stock",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../docs",
+    "binding": "ASSETS",
+    // ปกติ Cloudflare เสิร์ฟไฟล์ static ตรงจาก edge โดยไม่เรียก Worker
+    // ต้องบอกให้ Worker ทำงานก่อนเฉพาะหน้า HTML จะได้ติดชุดสีประจำบริษัทได้
+    "run_worker_first": ["/", "/index.html"]
+  },
+  "vars": {
+    "REPO_OWNER": "ittipat2529",
+    "REPO_NAME": "mintra-stock",
+    "COMPANY_NAME": "บริษัท มินตรา กรุ๊ป 2019 จำกัด",
+    "COMPANY_SHORT": "มินตรา กรุ๊ป 2019",
+    "COMPANY_LOGO": "assets/logo.webp"
+  },
+  "observability": { "enabled": true },
+
+  "durable_objects": {
+    "bindings": [{ "name": "STOCK", "class_name": "StockRoom" }]
+  },
+
+  // 23:55 เวลาไทย = 16:55 UTC — เก็บยอดปิดวันลงรีโปก่อนวันเปลี่ยน
+  "triggers": { "crons": ["55 16 * * *"] },
+
+  // ต้องประกาศครั้งเดียวที่ระดับบนสุด ใช้กับทุก environment
+  // sqlite ใช้ได้กับแผนฟรี ส่วนแบบ key-value ต้องเสียเงิน
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["StockRoom"] }
+  ]
+}
