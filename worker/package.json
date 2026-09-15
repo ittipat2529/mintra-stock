@@ -1,0 +1,14 @@
+{
+  "name": "mintra-stock-worker",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ระบบสต็อกสินค้ายิงบาร์โค้ดแบบเรียลไทม์ — ตัว Worker",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev --local",
+    "check": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "4.131.2"
+  }
+}

@@ -111,11 +111,33 @@ Durable Object ถูกสร้างให้เองตอน deploy คร
 
 ขั้นตอนถัดไปและวิธีตรวจว่าทำงานถูก อยู่ที่ท้าย [STOCK.md](STOCK.md)
 
+### deploy เองทุกครั้งที่ push
+
+ต่อรีโปนี้เข้ากับ Worker ใน Cloudflare dashboard ครั้งเดียว แล้วจากนั้นแก้โค้ดแล้ว `git push`
+Cloudflare จะ deploy ให้เอง ไม่ต้องเปิดเทอร์มินัลอีก
+
+| ช่องที่ต้องตั้ง | ค่า |
+|---|---|
+| Repository | `ittipat2529/mintra-stock` |
+| Branch | `main` |
+| **Root directory** | **`worker`** |
+| Build command | เว้นว่าง — ไม่มีขั้น build |
+| Deploy command | `npx wrangler deploy` |
+
+`worker` เป็น root เพราะ `wrangler.jsonc` อยู่ที่นั่น และมันอ้าง `../docs` ออกมาหาไฟล์หน้าเว็บ
+
+`wrangler` ถูกตรึงเวอร์ชันไว้ใน `worker/package.json` พร้อม `package-lock.json`
+build จึงได้เวอร์ชันเดิมทุกครั้ง ไม่ใช่เวอร์ชันล่าสุดที่อาจเปลี่ยนพฤติกรรม
+
+**secret ไม่ถูกแตะ** `GITHUB_TOKEN` กับ `SESSION_SECRET` เก็บอยู่ที่ Cloudflare ไม่ได้อยู่ในรีโป
+deploy ใหม่กี่ครั้งก็ยังอยู่ ไม่ต้องใส่ซ้ำ
+
 ## อยู่ที่ไฟล์ไหน
 
 ```
 worker/
 ├── wrangler.jsonc     ค่าตั้งของ Worker · Durable Object · Cron 23:55
+├── package.json       ตรึงเวอร์ชัน wrangler ให้ build ได้ผลเดิมทุกครั้ง
 └── src/
     ├── index.js       เส้นทาง /api/* ทั้งหมด · เข้าสู่ระบบ · กฎสิทธิ์ · Cron เก็บประวัติ
     ├── stock.js       Durable Object + SQLite · ตรรกะสต็อกทั้งหมด · WebSocket
