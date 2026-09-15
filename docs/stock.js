@@ -89,31 +89,48 @@
    * เสียงต่างกันสี่แบบ สำเร็จ / ไม่รู้จัก / ยิงซ้ำ / จะติดลบ
    */
   var actx = null;
-  function beep(kind) {
+  /**
+     เสียงยืนยันการยิง
+     ในคลังเสียงดัง คนยิงถือของอยู่และไม่ได้มองจอ เสียงจึงต้องดังพอให้ได้ยินจริง
+     ยิงติดเป็นสองจังหวะเสียงสูงขึ้น "ดี้-ด" แยกออกจากเสียงอื่นได้ตั้งแต่จังหวะแรก
+     และสั่นด้วยทุกแบบ เผื่อกรณีที่ดังเกินกว่าจะได้ยินอะไรเลย
+   */
+  var SOUNDS = {
+    ok:      { seq: [[1046, 0.09], [1568, 0.15]], gain: 0.55, vib: 45 },
+    dup:     { seq: [[420, 0.12]],                gain: 0.34, vib: 25 },
+    unknown: { seq: [[1180, 0.08], [1180, 0.08]], gain: 0.5,  vib: 45 },
+    bad:     { seq: [[200, 0.45]],                gain: 0.6,  vib: [90, 60, 90] }
+  };
+
+  /** ปลุกเสียงตอนคนแตะปุ่ม — เบราว์เซอร์มือถือไม่ให้เล่นเสียงก่อนมีการแตะจอ
+      ถ้าไม่ปลุกไว้ก่อน เสียงครั้งแรกจะถูกกลืนหายไปเฉย ๆ */
+  function warmAudio() {
     try {
       if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
       if (actx.state === "suspended") actx.resume();
-      var spec = {
-        ok:    [[880, 0.07]],
-        dup:   [[420, 0.10]],
-        unknown: [[1180, 0.07], [1180, 0.07]],
-        bad:   [[200, 0.42]]
-      }[kind] || [[880, 0.07]];
+    } catch (e) { /* เล่นเสียงไม่ได้ก็ยังมีแฟลชกับตัวหนังสือ */ }
+  }
+
+  function beep(kind) {
+    var sp = SOUNDS[kind] || SOUNDS.ok;
+    try {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === "suspended") actx.resume();
       var t = actx.currentTime;
-      spec.forEach(function (s, i) {
+      sp.seq.forEach(function (n) {
         var o = actx.createOscillator(), g = actx.createGain();
         o.type = "square";
-        o.frequency.value = s[0];
+        o.frequency.value = n[0];
         g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.16, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + s[1]);
+        g.gain.exponentialRampToValueAtTime(sp.gain, t + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + n[1]);
         o.connect(g); g.connect(actx.destination);
-        o.start(t); o.stop(t + s[1] + 0.02);
-        t += s[1] + 0.06;
+        o.start(t); o.stop(t + n[1] + 0.02);
+        t += n[1] + 0.03;
       });
     } catch (e) { /* เบราว์เซอร์ไม่ให้เล่นเสียงก็ไม่เป็นไร ยังมีสีกับตัวหนังสือ */ }
-    if (navigator.vibrate && (kind === "bad" || kind === "unknown")) {
-      navigator.vibrate(kind === "bad" ? [90, 60, 90] : 45);
+    if (navigator.vibrate && sp.vib) {
+      try { navigator.vibrate(sp.vib); } catch (e) {}
     }
   }
 
@@ -548,6 +565,9 @@
    * ทั้งการกันยิงซ้ำด้วย scanId คิวออฟไลน์ และกล่องผูกบาร์โค้ดที่ไม่รู้จัก
    */
 
+  // cam.js ต้องส่งเสียงเองตอนอ่านติด จึงต้องเอาเสียงออกไปให้มันเรียก
+  window.StockSound = { beep: beep, warm: warmAudio };
+
   function camOk() { return !!(window.StockCam && window.StockCam.supported()); }
 
   function paintCam() {
@@ -568,10 +588,31 @@
     if (cb) cb.hidden = !ok;
   }
 
-  /** เปิดกล้องแล้วส่งรหัสที่อ่านได้เข้าฟังก์ชันเดิม ไม่มีเส้นทางพิเศษของกล้อง */
-  function camOpen(handler) {
+  /**
+     เปิดกล้องแล้วส่งรหัสที่อ่านได้เข้าฟังก์ชันเดิม ไม่มีเส้นทางพิเศษของกล้อง
+     กล้องปิดตัวเองหลังอ่านติดครั้งเดียว แล้วเราพาสายตาไปที่ผลลัพธ์ให้เลย
+     คนยิงจึงเห็นทันทีว่าเข้าตัวไหนไปเท่าไร ไม่ต้องหาเองว่าผลอยู่ตรงไหนของหน้า
+   */
+  function camOpen(handler, resultId) {
     if (!camOk()) { A.toast(window.StockCam ? window.StockCam.why() : "เครื่องนี้ใช้กล้องยิงไม่ได้"); return; }
-    window.StockCam.open(handler);
+    // ต้องปลุกตอนนี้ ตอนที่นิ้วยังแตะปุ่มอยู่ — เบราว์เซอร์มือถือไม่ให้เล่นเสียงนอกจังหวะนี้
+    warmAudio();
+    window.StockCam.open(function (code) {
+      handler(code);
+      showResult(resultId);
+    });
+  }
+
+  function showResult(id) {
+    if (!id) return;
+    // รอให้กล้องถอนตัวและหน้าจอกลับมาก่อน ไม่งั้นเลื่อนไปตอนที่ยังวัดตำแหน่งไม่ได้
+    setTimeout(function () {
+      var el = $(id);
+      if (!el) return;
+      var box = el.closest ? (el.closest(".card") || el) : el;
+      try { box.scrollIntoView({ behavior: "smooth", block: "start" }); }
+      catch (e) { box.scrollIntoView(); }
+    }, 90);
   }
 
   function focusCode() {
@@ -579,7 +620,12 @@
     if (el && st.pane === "scan" && isActive()) el.focus();
   }
 
-  function submitScan(raw) {
+  /**
+     opts.quietOk = กล้องส่งเสียงยืนยันไปแล้วตอนอ่านติด ไม่ต้องส่งซ้ำ
+     แต่เสียง "ผิด" ทุกแบบยังดังเหมือนเดิม เพราะนั่นคือเสียงที่คนต้องได้ยินที่สุด
+   */
+  function submitScan(raw, opts) {
+    var quietOk = !!(opts && opts.quietOk);
     var code = String(raw || "").trim();
     if (!code) return;
 
@@ -612,7 +658,7 @@
        จอง (reserve) ไม่มีเส้นทางนี้เลย เพราะจองจากตัวเลขที่ไม่สดคือต้นเหตุของการขายซ้ำ */
     if (navigator.onLine === false) {
       queueAdd("scan", payload).then(function () {
-        beep("ok");
+        if (!quietOk) beep("ok");
         pushRecent({ name: guessName || code, delta: 0, queued: true,
                      issueOffline: st.mode === "issue" });
       });
@@ -631,7 +677,7 @@
       } else {
         st.tally += Math.abs(r.delta || 0);
         $("sTally").textContent = n0(st.tally);
-        beep(r.negative ? "bad" : "ok");
+        if (r.negative) beep("bad"); else if (!quietOk) beep("ok");
         pushRecent({
           name: r.name || guessName || code, delta: r.delta,
           left: r.row ? r.row.onHand : null,
@@ -649,7 +695,7 @@
       // เน็ตล่มระหว่างส่ง = เข้าคิว · เซิร์ฟเวอร์ปฏิเสธ = ของจริงผิด ห้ามเข้าคิว
       if (isNetworkErr(err)) {
         queueAdd("scan", payload).then(function () {
-          beep("ok");
+          if (!quietOk) beep("ok");
           pushRecent({ name: guessName || code, delta: 0, queued: true,
                        issueOffline: st.mode === "issue" });
         });
@@ -1501,20 +1547,21 @@
         }).join("") + "</tbody></table>";
   }
 
-  function countScan(raw) {
+  function countScan(raw, opts) {
+    var quietOk = !!(opts && opts.quietOk);
     var code = String(raw || "").trim();
     if (!code || !st.count) return;
     var units = Math.max(1, Math.trunc(Number($("scUnits").value) || 1));
     var payload = { countId: st.count.count.id, barcode: code, units: units, scanId: uuid() };
 
     if (navigator.onLine === false) {
-      queueAdd("count", payload).then(function () { beep("ok"); });
+      queueAdd("count", payload).then(function () { if (!quietOk) beep("ok"); });
       return;
     }
 
     A.api("/stock/count/scan", "POST", payload).then(function (r) {
       if (r.unknownBarcode) { beep("unknown"); openBarcodeDialog(code, units); return; }
-      beep(r.duplicate ? "dup" : "ok");
+      if (r.duplicate) beep("dup"); else if (!quietOk) beep("ok");
       return loadCount(st.count.count.id);
     }).catch(function (err) {
       if (isNetworkErr(err)) { queueAdd("count", payload).then(function () { beep("ok"); }); return; }
@@ -2082,7 +2129,9 @@
     if (b) setMode(b.getAttribute("data-mode"));
   });
 
-  $("sCamBtn").addEventListener("click", function () { camOpen(submitScan); });
+  $("sCamBtn").addEventListener("click", function () {
+    camOpen(function (code) { submitScan(code, { quietOk: true }); }, "sRecent");
+  });
 
   $("sQCam").addEventListener("click", function () {
     // ฝ่ายขายส่องของในมือลูกค้า — เปิดตัวนั้นให้ดูเลย ไม่ใช่แค่เติมช่องค้นหา
@@ -2093,7 +2142,6 @@
         st.q = "";
         $("sQ").value = "";
         renderBrowse();
-        beep("ok");
       } else {
         // ไม่รู้จักก็ยังบอกรหัสไว้ในช่อง ให้หัวหน้าเอาไปผูกต่อได้
         st.q = code;
@@ -2101,11 +2149,13 @@
         renderBrowse();
         beep("unknown");
       }
-    });
+    }, "sDetail");
   });
 
   $("sCountBody").addEventListener("click", function (ev) {
-    if (ev.target.closest("#scCamBtn")) camOpen(countScan);
+    if (ev.target.closest("#scCamBtn")) {
+      camOpen(function (code) { countScan(code, { quietOk: true }); }, "sCountBody");
+    }
   });
 
   $("sCode").addEventListener("keydown", function (ev) {
