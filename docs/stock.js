@@ -61,6 +61,7 @@
     ws: null, conn: "off", retry: 0, retryTimer: null, pollTimer: null, tickTimer: null,
     bc: null, editSku: null, loaded: false,
     reasons: [], reason: "", reserveHours: 24,
+    nextSku: "", nextBarcode: "", skuPrefix: "",
     mine: [], board: null, alerts: [], boardTimer: null, alertAt: 0,
     counts: [], count: null, countFilter: "all", adjReasons: {},
     value: null, receipts: [], adjustments: [], rc: null,
@@ -746,8 +747,45 @@
     return A.api("/stock/products").then(function (d) {
       st.master = d.products || [];
       st.masterBarcodes = d.barcodes || [];
+      takeCodes(d);
       renderMaster();
     }).catch(A.handleErr);
+  }
+
+  /**
+     เลขถัดไปที่เซิร์ฟเวอร์บอกมาเป็น "ตัวอย่าง" ไม่ใช่เลขที่จองไว้ให้
+     คนแจกเลขจริงคือ Durable Object ตอนกดบันทึก หน้าเว็บไม่เคยคิดเลขเอง
+     ถ้าหัวหน้าสองคนเปิดฟอร์มพร้อมกันจะเห็นตัวอย่างเลขเดียวกัน
+     แต่พอกดบันทึก แต่ละคนจะได้เลขคนละตัว
+   */
+  function takeCodes(d) {
+    if (d.nextSku) st.nextSku = d.nextSku;
+    if (d.nextBarcode) st.nextBarcode = d.nextBarcode;
+    if (d.skuPrefix) st.skuPrefix = d.skuPrefix;
+    paintCodeHints();
+  }
+
+  function paintCodeHints() {
+    var sk = $("sfSku"), note = $("sfSkuNote");
+    if (sk && !st.editSku) {
+      sk.placeholder = st.nextSku ? "ระบบจะให้ " + st.nextSku : "เว้นว่าง = ระบบรันให้";
+    }
+    if (note) {
+      note.textContent = st.editSku ? ""
+        : (st.nextSku ? "เว้นว่างไว้จะได้ " + st.nextSku + " · พิมพ์รหัสเองก็ได้ ระบบจะไม่ไปทับ" : "");
+    }
+    var bn = $("sfBcNote");
+    if (bn) bn.textContent = (!st.editSku && st.nextBarcode) ? "(" + st.nextBarcode + ")" : "";
+
+    var pre = $("sResPrefix");
+    if (pre && st.skuPrefix && document.activeElement !== pre) pre.value = st.skuPrefix;
+    var cn = $("sResCodeNote");
+    if (cn) {
+      cn.textContent = st.nextSku
+        ? "สินค้าตัวถัดไปจะได้รหัส " + st.nextSku + " · บาร์โค้ด " + (st.nextBarcode || "—")
+          + " · เปลี่ยนคำนำหน้ามีผลกับตัวที่เพิ่มหลังจากนี้ รหัสเก่าไม่ถูกแก้ตาม"
+        : "";
+    }
   }
 
   function renderMaster() {
@@ -787,6 +825,10 @@
     $("sPfTitle").textContent = m ? "แก้ไข " + m.sku : "เพิ่มสินค้า";
     $("sfSku").value = m ? m.sku : "";
     $("sfSku").disabled = !!m;
+    // บาร์โค้ดออกให้เฉพาะตอนเพิ่มสินค้าใหม่ ของเดิมมีอยู่แล้วหรือผูกเองในกล่องด้านล่าง
+    $("sfAutoBcRow").hidden = !!m;
+    $("sfAutoBc").checked = true;
+    paintCodeHints();
     $("sfName").value = m ? m.name : "";
     $("sfUnit").value = m ? m.unit : "";
     $("sfCat").value = m ? (m.category || "") : "";
@@ -802,13 +844,24 @@
       unit: $("sfUnit").value.trim(),
       category: $("sfCat").value.trim(),
       reorderPoint: Math.max(0, Math.trunc(Number($("sfRop").value) || 0)),
-      active: $("sfActive").checked
+      active: $("sfActive").checked,
+      autoBarcode: !st.editSku && $("sfAutoBc").checked
     };
-    if (!body.sku || !body.name) { A.toast("ต้องใส่รหัสสินค้าและชื่อ"); return; }
+    // รหัสไม่บังคับแล้ว เว้นว่างไว้เซิร์ฟเวอร์รันให้ แต่ชื่อยังบังคับ
+    if (!body.name) { A.toast("ต้องใส่ชื่อสินค้า"); return; }
     A.setBusy(true, $("sfSave"), "กำลังบันทึก…");
     A.api("/stock/products", "POST", body).then(function (r) {
-      A.toast(r.created ? "เพิ่มสินค้าแล้ว" : "แก้ไขสินค้าแล้ว");
+      takeCodes(r);
+      // บอกรหัสที่ได้ให้ชัด เพราะคนกดไม่ได้พิมพ์มันเอง
+      A.toast(r.created
+        ? "เพิ่ม " + r.sku + " แล้ว" + (r.barcode ? " · บาร์โค้ด " + r.barcode : "")
+        : "แก้ไข " + r.sku + " แล้ว");
       fillProductForm(null);
+      $("sfName").value = "";
+      $("sfCat").value = "";
+      $("sfRop").value = 0;
+      // ของที่เพิ่งเพิ่มมักต้องพิมพ์ฉลากต่อ เติม SKU ให้กล่องผูกบาร์โค้ดไว้เลย
+      if (r.created) $("sbSku").value = r.sku;
       return Promise.all([loadMaster(), fetchSnapshot()]);
     }).catch(A.handleErr).then(function () {
       A.setBusy(false, $("sfSave"), "บันทึกสินค้า");
@@ -821,9 +874,13 @@
       sku: $("sbSku").value.trim().toUpperCase(),
       packQty: Math.max(1, Math.trunc(Number($("sbQty").value) || 1))
     };
-    if (!body.barcode || !body.sku) { A.toast("ต้องใส่บาร์โค้ดและ SKU"); return; }
-    A.api("/stock/barcodes", "POST", body).then(function () {
-      A.toast("ผูกบาร์โค้ดแล้ว");
+    // บาร์โค้ดไม่บังคับแล้ว เว้นว่างไว้เซิร์ฟเวอร์สร้างให้ แต่ต้องรู้ว่าผูกกับตัวไหน
+    if (!body.sku) { A.toast("ต้องบอกว่าผูกกับสินค้าตัวไหน"); return; }
+    A.api("/stock/barcodes", "POST", body).then(function (r) {
+      takeCodes(r);
+      A.toast(r.autoBarcode
+        ? "สร้างบาร์โค้ด " + r.barcode + " ให้ " + r.sku + " แล้ว"
+        : "ผูกบาร์โค้ดแล้ว");
       $("sbCode").value = "";
       return Promise.all([loadMaster(), fetchSnapshot()]);
     }).catch(A.handleErr);
@@ -856,8 +913,8 @@
 
       var head = splitCsvLine(lines[0]).map(function (h) { return h.toLowerCase(); });
       var col = function (name) { return head.indexOf(name); };
-      if (col("sku") < 0 || col("name") < 0) {
-        $("sImportNote").textContent = "หัวตารางต้องมีอย่างน้อย sku และ name";
+      if (col("name") < 0) {
+        $("sImportNote").textContent = "หัวตารางต้องมีคอลัมน์ name เป็นอย่างน้อย";
         return;
       }
 
@@ -869,14 +926,18 @@
           category: pick("category"), reorderPoint: pick("reorderpoint"),
           barcode: pick("barcode"), packQty: pick("packqty")
         };
-      }).filter(function (r) { return r.sku && r.name; });
+      }).filter(function (r) { return r.name; });
 
       if (!rows.length) { $("sImportNote").textContent = "ไม่พบแถวที่ใช้ได้"; return; }
       $("sImportNote").textContent = "กำลังนำเข้า " + rows.length + " แถว…";
 
-      A.api("/stock/products/bulk", "POST", { products: rows }).then(function (r) {
+      A.api("/stock/products/bulk", "POST", {
+        products: rows, autoBarcode: $("sImportAutoBc").checked
+      }).then(function (r) {
+        takeCodes(r);
         $("sImportNote").textContent = "เพิ่มใหม่ " + r.created + " · อัปเดต " + r.updated
-          + (r.skipped ? " · ข้าม " + r.skipped + " (รหัสหรือชื่อไม่ถูกต้อง)" : "");
+          + (r.coded ? " · สร้างบาร์โค้ดให้ " + r.coded : "")
+          + (r.skipped ? " · ข้าม " + r.skipped + " (ไม่มีชื่อสินค้า)" : "");
         A.toast("นำเข้าสินค้าเรียบร้อย");
         return Promise.all([loadMaster(), fetchSnapshot()]);
       }).catch(function (err) {
@@ -1953,9 +2014,13 @@
   /* ---------- ค่าตั้งอายุการจอง ---------- */
   $("sResSave").addEventListener("click", function () {
     var h = Math.max(1, Math.trunc(Number($("sResHours").value) || 24));
-    A.api("/stock/config", "POST", { reserveHours: h }).then(function (r) {
+    A.api("/stock/config", "POST", {
+      reserveHours: h, skuPrefix: $("sResPrefix").value.trim()
+    }).then(function (r) {
       st.reserveHours = r.reserveHours;
-      $("sToolNote").textContent = "การจองหมดอายุใน " + r.reserveHours + " ชั่วโมง";
+      takeCodes(r);
+      $("sToolNote").textContent = "การจองหมดอายุใน " + r.reserveHours + " ชั่วโมง"
+        + " · รหัสถัดไป " + (r.nextSku || "—");
       A.toast("บันทึกค่าตั้งแล้ว");
     }).catch(A.handleErr);
   });

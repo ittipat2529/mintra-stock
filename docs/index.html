@@ -347,8 +347,9 @@
           <h2 id="sPfTitle">เพิ่มสินค้า</h2>
           <div class="body">
             <div class="field" style="margin-top:0">
-              <label class="lbl" for="sfSku">รหัสสินค้า (SKU)</label>
-              <input type="text" id="sfSku" class="num" autocomplete="off" placeholder="MTL-30">
+              <label class="lbl" for="sfSku">รหัสสินค้า (SKU) — เว้นว่างไว้ให้ระบบรันให้</label>
+              <input type="text" id="sfSku" class="num" autocomplete="off" placeholder="ระบบจะให้ MT-0001">
+              <p class="note" id="sfSkuNote" style="margin-top:6px"></p>
             </div>
             <div class="field">
               <label class="lbl" for="sfName">ชื่อสินค้า</label>
@@ -371,6 +372,10 @@
             <label class="remember" style="margin-top:13px">
               <input type="checkbox" id="sfActive" checked> ยังขายอยู่
             </label>
+            <label class="remember" id="sfAutoBcRow" style="margin-top:7px">
+              <input type="checkbox" id="sfAutoBc" checked> สร้างบาร์โค้ดให้เลย
+              <span class="note" id="sfBcNote" style="margin-left:6px"></span>
+            </label>
             <button type="button" class="btn btn-main" id="sfSave">บันทึกสินค้า</button>
             <button type="button" class="btn btn-ghost" id="sfCancel" style="width:100%;margin-top:9px">ล้างฟอร์ม</button>
 
@@ -378,8 +383,8 @@
               <details>
                 <summary>ผูกบาร์โค้ดกับสินค้า</summary>
                 <div class="field">
-                  <label class="lbl" for="sbCode">บาร์โค้ด</label>
-                  <input type="text" id="sbCode" class="num" autocomplete="off">
+                  <label class="lbl" for="sbCode">บาร์โค้ด — ยิงของโรงงานลงช่องนี้ หรือเว้นว่างให้ระบบสร้างให้</label>
+                  <input type="text" id="sbCode" class="num" autocomplete="off" placeholder="เว้นว่าง = ระบบสร้างให้">
                 </div>
                 <div class="two">
                   <div class="field">
@@ -392,7 +397,8 @@
                   </div>
                 </div>
                 <button type="button" class="btn btn-ghost" id="sbSave" style="width:100%;margin-top:13px">ผูกบาร์โค้ด</button>
-                <p class="note" style="margin-top:9px">ยิงลังได้ 12 ชิ้นก็ใส่ 12 — บาร์โค้ดหนึ่งผูกได้กับสินค้าตัวเดียว</p>
+                <p class="note" style="margin-top:9px">ยิงลังได้ 12 ชิ้นก็ใส่ 12 — บาร์โค้ดหนึ่งผูกได้กับสินค้าตัวเดียว
+                  แต่สินค้าตัวเดียวมีได้หลายบาร์โค้ด (ของโรงงานหนึ่งใบ ของลังอีกใบ)</p>
               </details>
             </div>
           </div>
@@ -434,7 +440,15 @@
           <div class="card" id="sImportCard" hidden>
             <h2>นำเข้าสินค้าจาก CSV</h2>
             <div class="body">
-              <p class="note" style="margin:0 0 11px">หัวตาราง <code>sku,name,unit,category,reorderPoint,barcode,packQty</code> — ยิงซ้ำได้ ของเดิมถูกอัปเดตทับ ไม่สร้างซ้ำ</p>
+              <p class="note" style="margin:0 0 11px">หัวตาราง <code>sku,name,unit,category,reorderPoint,barcode,packQty</code> —
+                ต้องมีแค่ <code>name</code> ก็พอ คอลัมน์ที่เหลือขาดได้ · แถวที่ไม่มี <code>sku</code> ระบบรันรหัสให้เอง ·
+                ยิงซ้ำได้ ของเดิมถูกอัปเดตทับ ไม่สร้างซ้ำ</p>
+              <p class="note" style="margin:0 0 11px">แถวที่ไม่มี <code>sku</code> ระบบจับคู่กับของเดิม <b>ด้วยชื่อสินค้า</b>
+                นำเข้าไฟล์เดิมซ้ำจึงไม่ได้ของคู่แฝด — แต่ถ้ามีสินค้าสองตัวชื่อเหมือนกันเป๊ะ มันจะถูกถือเป็นตัวเดียวกัน
+                ของแบบนั้นให้ใส่ <code>sku</code> มาในไฟล์</p>
+              <label class="remember" style="margin:0 0 13px">
+                <input type="checkbox" id="sImportAutoBc" checked> สร้างบาร์โค้ดให้ตัวที่ยังไม่มี
+              </label>
               <input type="file" id="sImportFile" accept=".csv,text/csv">
               <p class="note" id="sImportNote" style="margin-top:11px"></p>
             </div>
@@ -452,6 +466,11 @@
                 </div>
               </div>
               <p class="note" style="margin-top:9px">การจองที่ค้างคือสต็อกที่ขายไม่ได้ทั้งที่ของอยู่บนชั้น ระบบจะปล่อยคืนเองเมื่อครบเวลา</p>
+              <div class="field">
+                <label class="lbl" for="sResPrefix">คำนำหน้ารหัสสินค้า</label>
+                <input type="text" id="sResPrefix" class="num" maxlength="12" autocomplete="off" placeholder="MT-">
+                <p class="note" id="sResCodeNote" style="margin-top:6px"></p>
+              </div>
             </div>
             <div class="tools">
               <button type="button" class="btn btn-ghost" id="sSweep">ปล่อยของจากการจองที่หมดอายุ</button>

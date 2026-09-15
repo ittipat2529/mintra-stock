@@ -205,6 +205,26 @@ const MAX_UNITS = 5000;
 const MAX_BATCH = 200;
 const RECENT_LIMIT = 40;
 
+/**
+ * รหัสสินค้าที่ระบบรันให้ — คำนำหน้า + เลขสี่หลัก เช่น MT-0001
+ * คำนำหน้าแก้ได้ในหน้าค่าตั้ง แต่จำนวนหลักตายตัว
+ * เพราะเปลี่ยนแล้วรหัสเก่ากับใหม่จะเรียงไม่ตรงกัน (MT-999 มาก่อน MT-1000)
+ */
+const DEFAULT_SKU_PREFIX = "MT-";
+const SKU_DIGITS = 4;
+
+/**
+ * บาร์โค้ดที่ระบบรันให้ — 13 หลักแบบ EAN-13 ขึ้นต้นด้วย 20
+ *
+ * ช่วง 20–29 เป็นช่วงที่มาตรฐาน GS1 สงวนไว้ให้องค์กรใช้ภายใน
+ * จึงไม่มีทางชนกับบาร์โค้ดของสินค้าจากซัพพลายเออร์รายไหนในโลก
+ *
+ * เป็นตัวเลขล้วนโดยตั้งใจ — เครื่องยิงทำตัวเป็นคีย์บอร์ด
+ * ถ้ารหัสมีตัวอักษรแล้วเครื่องคอมตั้งภาษาไทยไว้ ตัวอักษรจะกลายเป็นภาษาไทย
+ * ส่วนตัวเลขออกมาถูกทุกภาษา
+ */
+const BARCODE_PREFIX = "20";
+
 function nowIso() { return new Date().toISOString(); }
 
 /**
@@ -265,6 +285,104 @@ export class StockRoom {
     const r = this.sql.exec(`SELECT v FROM meta WHERE k=?`, key).toArray()[0];
     const n = r ? Number(r.v) : NaN;
     return isFinite(n) && n > 0 ? n : dflt;
+  }
+
+  /** ค่าตั้งที่เป็นข้อความ เช่นคำนำหน้ารหัสสินค้า — #setting รับแต่ตัวเลข */
+  #settingStr(key, dflt) {
+    const r = this.sql.exec(`SELECT v FROM meta WHERE k=?`, key).toArray()[0];
+    return r && r.v ? String(r.v) : dflt;
+  }
+
+  #putSetting(key, value) {
+    this.sql.exec(`INSERT INTO meta (k, v) VALUES (?, ?)
+                   ON CONFLICT(k) DO UPDATE SET v = excluded.v`, key, String(value));
+  }
+
+  /* ---------- รหัสสินค้าและบาร์โค้ดที่ระบบรันให้ ----------
+
+     ทั้งสองตัวถูกแจกที่นี่ ไม่ใช่ที่หน้าเว็บ เพราะ Durable Object ทำงานทีละคำขอ
+     หัวหน้าคลังสองคนกดเพิ่มสินค้าพร้อมกันจึงได้เลขคนละตัวเสมอ
+     ถ้าให้หน้าเว็บคิดเลขเอง สองคนจะได้เลขเดียวกันแล้วทับกัน
+
+     ตัวนับเดินหน้าอย่างเดียว ไม่เคยถอยและไม่เอาเลขที่ลบไปแล้วมาใช้ซ้ำ
+     เพราะฉลากที่พิมพ์แล้วแปะไปกับของจริง เลขซ้ำหมายถึงของสองตัวถูกยิงเป็นตัวเดียวกัน  */
+
+  /**
+     ข้ามเลขที่มีคนใช้ไปแล้ว — ผู้ใช้ยังพิมพ์รหัสเองได้ ถ้าเขาพิมพ์ MT-0009 ไว้
+     ตัวรันต้องไม่ไปทับ และ LIMIT กันไว้ไม่ให้วนไม่จบถ้าข้อมูลพิสดาร
+   */
+  #nextSkuSync() {
+    const prefix = this.#settingStr("skuPrefix", DEFAULT_SKU_PREFIX);
+    let n = Math.max(1, Math.trunc(this.#setting("skuNext", 1)));
+    for (let guard = 0; guard < 100000; guard++) {
+      const sku = prefix + String(n).padStart(SKU_DIGITS, "0");
+      const taken = this.sql.exec(`SELECT sku FROM products WHERE sku=?`, sku).toArray()[0];
+      if (!taken) {
+        this.#putSetting("skuNext", n + 1);
+        return sku;
+      }
+      n++;
+    }
+    return null;
+  }
+
+  /**
+     หลักตรวจสอบแบบ EAN-13 — คิดจากสิบสองหลักแรก
+     ถ้าเครื่องยิงอ่านเลขผิดไปหลักเดียว หลักนี้จะไม่ตรงและจับได้
+   */
+  #eanCheck(twelve) {
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+      sum += Number(twelve[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+    return String((10 - (sum % 10)) % 10);
+  }
+
+  /**
+     ขึ้นต้น 20 — ช่วง 20–29 เป็นช่วงที่มาตรฐาน GS1 สงวนไว้ให้ใช้ในองค์กร
+     จึงไม่มีทางชนกับบาร์โค้ดของสินค้าจากซัพพลายเออร์รายไหน
+   */
+  #nextBarcodeSync() {
+    let n = Math.max(1, Math.trunc(this.#setting("barcodeNext", 1)));
+    for (let guard = 0; guard < 100000; guard++) {
+      const body = BARCODE_PREFIX + String(n).padStart(12 - BARCODE_PREFIX.length, "0");
+      const code = body + this.#eanCheck(body);
+      const taken = this.sql.exec(`SELECT barcode FROM barcodes WHERE barcode=?`, code).toArray()[0];
+      if (!taken) {
+        this.#putSetting("barcodeNext", n + 1);
+        return code;
+      }
+      n++;
+    }
+    return null;
+  }
+
+  /**
+     เลขถัดไปที่จะได้ ไว้ให้หน้าเว็บขึ้นตัวอย่าง — ไม่จองเลขและไม่ขยับตัวนับ
+     ข้ามเลขที่ถูกใช้ไปแล้วด้วย ไม่งั้นตัวอย่างจะบอกเลขที่คนพิมพ์จองมือไว้
+     แล้วพอกดบันทึกจะได้อีกเลข ซึ่งดูเหมือนระบบเพี้ยนทั้งที่ทำถูก
+   */
+  #previewCodes() {
+    const prefix = this.#settingStr("skuPrefix", DEFAULT_SKU_PREFIX);
+
+    let sn = Math.max(1, Math.trunc(this.#setting("skuNext", 1)));
+    let nextSku = "";
+    for (let guard = 0; guard < 10000; guard++) {
+      const cand = prefix + String(sn).padStart(SKU_DIGITS, "0");
+      if (!this.sql.exec(`SELECT sku FROM products WHERE sku=?`, cand).toArray()[0]) { nextSku = cand; break; }
+      sn++;
+    }
+
+    let bn = Math.max(1, Math.trunc(this.#setting("barcodeNext", 1)));
+    let nextBarcode = "";
+    for (let guard = 0; guard < 10000; guard++) {
+      const bbody = BARCODE_PREFIX + String(bn).padStart(12 - BARCODE_PREFIX.length, "0");
+      const cand = bbody + this.#eanCheck(bbody);
+      if (!this.sql.exec(`SELECT barcode FROM barcodes WHERE barcode=?`, cand).toArray()[0]) { nextBarcode = cand; break; }
+      bn++;
+    }
+
+    return { skuPrefix: prefix, nextSku, nextBarcode };
   }
 
   /* ---------- เลขเวอร์ชัน ใช้ให้หน้าจอรู้ว่าพลาดข่าวไปหรือเปล่า ---------- */
@@ -1359,9 +1477,19 @@ export class StockRoom {
 
     if (path === "/config" && request.method === "POST") {
       const hours = clampInt(body.reserveHours, 1, 24 * 30, DEFAULT_RESERVE_HOURS);
-      this.sql.exec(`INSERT INTO meta (k, v) VALUES ('reserveHours', ?)
-                     ON CONFLICT(k) DO UPDATE SET v = excluded.v`, String(hours));
-      return this.#json({ ok: true, reserveHours: hours });
+      this.#putSetting("reserveHours", hours);
+
+      // คำนำหน้ารหัสสินค้า — เปลี่ยนได้ แต่มีผลกับตัวที่เพิ่มหลังจากนี้เท่านั้น
+      // รหัสเก่าไม่ถูกแก้ตาม เพราะมันถูกพิมพ์แปะไปกับของจริงแล้ว
+      if (body.skuPrefix != null) {
+        const pre = str(body.skuPrefix, 12).toUpperCase();
+        if (pre && !/^[A-Z0-9][A-Z0-9._-]{0,11}$/.test(pre)) {
+          return this.#json(bad("คำนำหน้ารหัสใช้ได้แค่ A-Z 0-9 . _ - และต้องเริ่มด้วยตัวอักษรหรือเลข"), 400);
+        }
+        this.#putSetting("skuPrefix", pre || DEFAULT_SKU_PREFIX);
+      }
+
+      return this.#json({ ok: true, reserveHours: hours, ...this.#previewCodes() });
     }
 
     if (path === "/scan") {
@@ -1396,15 +1524,24 @@ export class StockRoom {
       // หน้าจัดการสินค้าต้องเห็นตัวที่ปิดใช้งานด้วย จึงส่งทะเบียนทั้งหมดไม่ใช่แค่ตัวที่ยังขาย
       return this.#json({
         products: this.#allProducts(),
-        barcodes: this.sql.exec(`SELECT barcode, sku, packQty, label FROM barcodes ORDER BY sku`).toArray()
+        barcodes: this.sql.exec(`SELECT barcode, sku, packQty, label FROM barcodes ORDER BY sku`).toArray(),
+        ...this.#previewCodes()
       });
     }
 
     if (path === "/products" && request.method === "POST") {
-      const sku = str(body.sku, 40).toUpperCase();
-      if (!/^[A-Z0-9][A-Z0-9._-]{1,39}$/.test(sku)) return this.#json(bad("รหัสสินค้าใช้ได้แค่ A-Z 0-9 . _ - และต้องยาว 2 ตัวขึ้นไป"), 400);
       const name = str(body.name, 120);
       if (!name) return this.#json(bad("ต้องใส่ชื่อสินค้า"), 400);
+
+      // เว้นช่องรหัสไว้ = ให้ระบบรันให้ · พิมพ์มาเอง = ใช้ตามที่พิมพ์
+      // ตรวจชื่อก่อนแจกรหัส ไม่งั้นกดพลาดทีเดียวเลขก็เดินหน้าไปฟรี ๆ
+      let sku = str(body.sku, 40).toUpperCase();
+      const autoSku = !sku;
+      if (autoSku) {
+        sku = this.#nextSkuSync();
+        if (!sku) return this.#json(bad("ระบบหาเลขรหัสสินค้าที่ว่างไม่ได้", "NO_CODE"), 500);
+      }
+      if (!/^[A-Z0-9][A-Z0-9._-]{1,39}$/.test(sku)) return this.#json(bad("รหัสสินค้าใช้ได้แค่ A-Z 0-9 . _ - และต้องยาว 2 ตัวขึ้นไป"), 400);
 
       const exists = this.sql.exec(`SELECT sku FROM products WHERE sku=?`, sku).toArray()[0];
       const unit = str(body.unit, 20) || "ชิ้น";
@@ -1424,20 +1561,50 @@ export class StockRoom {
           sku, name, unit, category, reorderPoint, active, who, nowIso());
       }
 
+      // ออกบาร์โค้ดให้ในคำขอเดียวกัน — ของที่ไม่มีบาร์โค้ดจากโรงงานยิงไม่ได้
+      // ถ้าต้องกดสองที คนจะลืมกดที่สอง แล้วสินค้าตัวนั้นก็ยิงไม่ได้ทั้งที่อยู่ในทะเบียน
+      let newBarcode = null;
+      if (body.autoBarcode && !exists) {
+        newBarcode = this.#nextBarcodeSync();
+        if (newBarcode) {
+          this.sql.exec(
+            `INSERT INTO barcodes (barcode, sku, packQty, label, createdBy, createdAt)
+             VALUES (?, ?, 1, '', ?, ?)`,
+            newBarcode, sku, who, nowIso());
+        }
+      }
+
       const version = this.#bump();
       this.#announce([sku], version);
-      return this.#json({ ok: true, sku, created: !exists, version, products: this.#allProducts() });
+      return this.#json({
+        ok: true, sku, autoSku, barcode: newBarcode,
+        created: !exists, version, products: this.#allProducts(),
+        ...this.#previewCodes()
+      });
     }
 
     if (path === "/products/bulk") {
       // นำเข้าสินค้าหลายตัวทีเดียว ใช้ตอนเริ่มระบบ ยิงซ้ำได้ ของเดิมถูกอัปเดตทับ
       const list = Array.isArray(body.products) ? body.products.slice(0, 2000) : [];
-      let created = 0, updated = 0, skipped = 0;
+      let created = 0, updated = 0, skipped = 0, coded = 0;
       const who = str(body.userId, 40);
       for (const p of list) {
-        const sku = str(p.sku, 40).toUpperCase();
         const name = str(p.name, 120);
-        if (!/^[A-Z0-9][A-Z0-9._-]{1,39}$/.test(sku) || !name) { skipped++; continue; }
+        if (!name) { skipped++; continue; }
+
+        // ไฟล์ที่ไม่มีคอลัมน์ sku หรือเว้นช่องไว้ = ให้ระบบรันรหัสให้ทีละแถว
+        // นำเข้าไฟล์ที่มีแต่ชื่อสินค้าได้เลย ไม่ต้องไปคิดรหัสมาก่อน
+        //
+        // แต่ต้องจับคู่กับของเดิมด้วยชื่อก่อนแจกรหัสใหม่ ไม่งั้นนำเข้าไฟล์เดิมซ้ำ
+        // จะได้สินค้าคู่แฝดทุกตัว แต่ละตัวมีบาร์โค้ดของตัวเอง — ของหนึ่งอย่าง
+        // กลายเป็นสองอย่างในทะเบียน แล้วยอดสต็อกก็แยกกันไปคนละทาง
+        // ในไฟล์ที่ไม่มีรหัส ชื่อคือสิ่งเดียวที่บอกได้ว่าแถวนี้คือของตัวไหน
+        let sku = str(p.sku, 40).toUpperCase();
+        if (!sku) {
+          const byName = this.sql.exec(`SELECT sku FROM products WHERE name=?`, name).toArray()[0];
+          sku = byName ? byName.sku : (this.#nextSkuSync() || "");
+        }
+        if (!/^[A-Z0-9][A-Z0-9._-]{1,39}$/.test(sku)) { skipped++; continue; }
         const had = this.sql.exec(`SELECT sku FROM products WHERE sku=?`, sku).toArray()[0];
         this.sql.exec(
           `INSERT INTO products (sku, name, unit, category, reorderPoint, createdBy, createdAt)
@@ -1449,7 +1616,15 @@ export class StockRoom {
           clampInt(p.reorderPoint, 0, 1e6, 0), who, nowIso());
         if (had) updated++; else created++;
 
-        const bc = str(p.barcode, 64);
+        let bc = str(p.barcode, 64);
+
+        // ไม่มีบาร์โค้ดในไฟล์และผู้ใช้ติ๊กให้ออกให้ = ออกให้เฉพาะตัวที่ยังไม่มีบาร์โค้ดผูกอยู่
+        // ตัวที่มีอยู่แล้วต้องไม่ถูกแจกใบที่สองทุกครั้งที่นำเข้าซ้ำ
+        if (!bc && body.autoBarcode) {
+          const had = this.sql.exec(`SELECT barcode FROM barcodes WHERE sku=? LIMIT 1`, sku).toArray()[0];
+          if (!had) { bc = this.#nextBarcodeSync() || ""; if (bc) coded++; }
+        }
+
         if (bc) {
           this.sql.exec(
             `INSERT INTO barcodes (barcode, sku, packQty, label, createdBy, createdAt)
@@ -1460,15 +1635,22 @@ export class StockRoom {
       }
       const version = this.#bump();
       this.#broadcast({ t: "reload", version });
-      return this.#json({ ok: true, created, updated, skipped, version });
+      return this.#json({ ok: true, created, updated, skipped, coded, version, ...this.#previewCodes() });
     }
 
     if (path === "/barcodes" && request.method === "POST") {
-      const barcode = str(body.barcode, 64);
       const sku = str(body.sku, 40).toUpperCase();
-      if (!barcode) return this.#json(bad("ต้องใส่บาร์โค้ด"), 400);
       const prod = this.sql.exec(`SELECT sku FROM products WHERE sku=?`, sku).toArray()[0];
       if (!prod) return this.#json(bad("ไม่พบสินค้ารหัสนี้", "NOT_FOUND"), 400);
+
+      // เว้นช่องบาร์โค้ดไว้ = ให้ระบบรันให้ · ยิงบาร์โค้ดของโรงงานลงช่อง = ใช้ตัวนั้น
+      // ตรวจว่ามีสินค้าตัวนี้จริงก่อนแจกเลข ไม่งั้นเลขเดินหน้าไปโดยไม่มีของผูก
+      let barcode = str(body.barcode, 64);
+      const autoBarcode = !barcode;
+      if (autoBarcode) {
+        barcode = this.#nextBarcodeSync();
+        if (!barcode) return this.#json(bad("ระบบหาเลขบาร์โค้ดที่ว่างไม่ได้", "NO_CODE"), 500);
+      }
 
       this.sql.exec(
         `INSERT INTO barcodes (barcode, sku, packQty, label, createdBy, createdAt)
@@ -1480,7 +1662,7 @@ export class StockRoom {
 
       const version = this.#bump();
       this.#broadcast({ t: "reload", version });
-      return this.#json({ ok: true, version, barcode, sku });
+      return this.#json({ ok: true, version, barcode, sku, autoBarcode, ...this.#previewCodes() });
     }
 
     if (path === "/barcodes/delete") {
