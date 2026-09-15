@@ -1,3 +1,14 @@
 {
-  "users": []
+  "users": [
+    {
+      "username": "ittipat",
+      "name": "อิทธิพัทธ์ สลีหมีน",
+      "role": "owner",
+      "salt": "9ddRj1cvWlSX8u8BMp20Tg",
+      "hash": "xwzdqz0rQI8KBTg0ckZCHCAJp1r2UVPBCguN7ajLZDk",
+      "iterations": 20000,
+      "createdAt": "2026-09-15T09:08:41.510Z",
+      "mustChangePassword": false
+    }
+  ]
 }
