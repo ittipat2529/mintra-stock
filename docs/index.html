@@ -125,14 +125,16 @@
 
     <!-- ---------- ยิงสต็อก ---------- -->
     <div id="sScan" hidden>
-      <div class="smode" id="sModeBar" data-mode="issue">
+      <!-- ไม่มีโหมดตั้งต้น ต้องกดเลือกก่อนถึงจะเห็นช่องยิง
+           เดิมตั้งเป็นแพ็คส่งไว้ แล้วคนเปิดมาใหม่ยิงผิดทางจนยอดติดลบ -->
+      <div class="smode" id="sModeBar" data-mode="none">
         <div class="sm-l">
-          <b class="display" id="sModeName">แพ็คส่ง</b>
-          <span id="sModeSub">ตัดของออกจากคลัง</span>
+          <b class="display" id="sModeName">เลือกโหมดก่อน</b>
+          <span id="sModeSub">ยังไม่ได้เลือกว่าจะรับเข้า แพ็คส่ง หรือรับคืน</span>
         </div>
         <div class="seg seg3 sm-tabs" role="group" aria-label="โหมดยิง">
           <button type="button" data-mode="receive" aria-pressed="false">รับเข้า</button>
-          <button type="button" data-mode="issue" aria-pressed="true">แพ็คส่ง</button>
+          <button type="button" data-mode="issue" aria-pressed="false">แพ็คส่ง</button>
           <button type="button" data-mode="return_in" aria-pressed="false">รับคืน</button>
         </div>
       </div>
@@ -140,7 +142,25 @@
       <div class="cols">
         <div class="card form-col">
           <h2>ยิงบาร์โค้ด</h2>
-          <div class="body">
+
+          <div class="body" id="sPickMode">
+            <p class="note" style="margin:0">กดเลือกโหมดด้านบนก่อน แล้วช่องยิงจะขึ้นมา</p>
+            <div class="pick3">
+              <button type="button" class="pk" data-mode="receive">
+                <b>รับเข้า</b><span>ของเข้าคลัง — ยอด <i>เพิ่ม</i></span>
+              </button>
+              <button type="button" class="pk" data-mode="issue">
+                <b>แพ็คส่ง</b><span>ของออกจากคลัง — ยอด <i>ลด</i></span>
+              </button>
+              <button type="button" class="pk" data-mode="return_in">
+                <b>รับคืน</b><span>ของตีกลับ — ต้องเลือกเหตุผล</span>
+              </button>
+            </div>
+            <p class="note" style="margin-top:13px">เครื่องนี้จะจำโหมดที่เลือกไว้
+              เปิดครั้งหน้าไม่ต้องเลือกอีก — แท็บเล็ตที่โต๊ะแพ็คจึงค้างอยู่ที่แพ็คส่งได้ตลอด</p>
+          </div>
+
+          <div class="body" id="sScanForm" hidden>
             <div class="field" style="margin-top:0">
               <label class="lbl" for="sRef" id="sRefLab">เลขออเดอร์</label>
               <input type="text" id="sRef" autocomplete="off" placeholder="เช่น KRY-88213">

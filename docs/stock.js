@@ -52,7 +52,9 @@
   var RECENT_MAX = 12;
 
   var st = {
-    role: "readonly", pane: "browse", mode: "issue",
+    // ไม่มีโหมดตั้งต้น — เดิมตั้งเป็น "issue" แล้วคนเปิดมาใหม่ยิงผิดทางทันที
+    // ของหายจากระบบโดยไม่มีใครรู้ อ่านที่ MODE_KEY ว่าจัดการอย่างไร
+    role: "readonly", pane: "browse", mode: "",
     version: 0, lastSync: 0,
     products: [], bySku: {}, byBarcode: {}, locations: [],
     q: "", selected: null,
@@ -513,10 +515,34 @@
 
   /* ================= ยิงสต็อก ================= */
 
+  /**
+     โหมดที่เลือกไว้ล่าสุดของเครื่องนี้ เก็บในเครื่อง ไม่ใช่ในเซิร์ฟเวอร์
+     เพราะมันเป็นเรื่องของ "เครื่องนี้ตั้งไว้ทำอะไร" ไม่ใช่เรื่องของคน
+     แท็บเล็ตที่โต๊ะแพ็คจึงค้างอยู่ที่แพ็คส่งตลอด ไม่ต้องเลือกใหม่ทุกครั้งที่เปิด
+
+     แต่ **ครั้งแรกของเครื่องนั้นไม่มีโหมดตั้งต้นให้** ต้องกดเลือกก่อนถึงจะยิงได้
+     เดิมตั้งค่าเริ่มต้นเป็นแพ็คส่ง ซึ่งเป็นทางที่อันตรายที่สุด — คนเปิดมาใหม่
+     ตั้งใจจะรับของเข้า แล้วยิงเลย กลายเป็นตัดของออกและยอดติดลบ
+     (เกิดขึ้นจริงกับเจ้าของตอนลองใช้ครั้งแรก ยอดติดลบไป 5)
+   */
+  var MODE_KEY = "mintra-stock:lastMode";
+
+  function rememberMode(m) {
+    try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* โหมดส่วนตัว/บล็อกไว้ก็ไม่เป็นไร */ }
+  }
+
+  function lastMode() {
+    try {
+      var m = localStorage.getItem(MODE_KEY);
+      return MODES[m] ? m : "";
+    } catch (e) { return ""; }
+  }
+
   function setMode(m) {
-    if (!MODES[m]) return;
+    if (!MODES[m]) { clearMode(); return; }
     st.mode = m;
     st.tally = 0;
+    rememberMode(m);
     var cfg = MODES[m];
     $("sModeBar").setAttribute("data-mode", m);
     $("sModeName").textContent = cfg.name;
@@ -525,6 +551,8 @@
     $("sRef").placeholder = cfg.ph;
     $("sTally").textContent = "0";
     $("sReasonWrap").hidden = !cfg.needReason;
+    $("sScanForm").hidden = false;
+    $("sPickMode").hidden = true;
     paintCostField();
     paintOfflineWarn();
     if (cfg.needReason) {
@@ -538,6 +566,22 @@
     focusCode();
   }
 
+  /** ยังไม่เลือกโหมด — ซ่อนฟอร์มทั้งก้อน ไม่ใช่โชว์ฟอร์มที่ยิงไปแล้วไม่รู้เข้าทางไหน */
+  function clearMode() {
+    st.mode = "";
+    st.tally = 0;
+    $("sModeBar").setAttribute("data-mode", "none");
+    $("sModeName").textContent = "เลือกโหมดก่อน";
+    $("sModeSub").textContent = "ยังไม่ได้เลือกว่าจะรับเข้า แพ็คส่ง หรือรับคืน";
+    $("sScanForm").hidden = true;
+    $("sPickMode").hidden = false;
+    $("sCostWrap").hidden = true;
+    document.querySelectorAll("#sModeBar .sm-tabs button").forEach(function (b) {
+      b.setAttribute("aria-pressed", "false");
+    });
+    renderRecent();
+  }
+
   /**
    * ตารางสิทธิ์ตอนออฟไลน์ (ตาม STOCK.md)
    *   รับเข้า / รับคืน / นับสต็อก  ยิงได้ เพราะบวกเข้าอย่างเดียว ไม่ต้องรู้ยอดปัจจุบัน
@@ -547,6 +591,7 @@
   function paintOfflineWarn() {
     var el = $("sScanHint");
     if (!el) return;
+    if (!MODES[st.mode]) { el.textContent = ""; return; }
     var off = navigator.onLine === false || st.conn !== "on";
     if (off && st.mode === "issue") {
       el.innerHTML = '<b style="color:var(--opex)">ออฟไลน์อยู่ — ยิงแพ็คส่งได้ '
@@ -629,6 +674,13 @@
     var quietOk = !!(opts && opts.quietOk);
     var code = String(raw || "").trim();
     if (!code) return;
+
+    // กำแพงชั้นที่สอง เผื่อมีรหัสเข้ามาทางอื่น เช่นคิวออฟไลน์หรือกล้อง
+    if (!MODES[st.mode]) {
+      beep("bad");
+      A.toast("เลือกโหมดก่อนยิง — รับเข้า แพ็คส่ง หรือรับคืน");
+      return;
+    }
 
     var units = Math.max(1, Math.trunc(Number($("sUnits").value) || 1));
 
@@ -749,7 +801,10 @@
     var box = $("sRecent");
     if (!box) return;
     if (!st.recent.length) {
-      box.innerHTML = '<p class="empty">ยังไม่ได้ยิงอะไรในรอบนี้ — โฟกัสอยู่ที่ช่องบาร์โค้ดแล้ว ยิงได้เลย</p>';
+      // ตอนยังไม่เลือกโหมดยังไม่มีช่องบาร์โค้ดให้โฟกัส ห้ามบอกว่ายิงได้เลย
+      box.innerHTML = '<p class="empty">' + (MODES[st.mode]
+        ? "ยังไม่ได้ยิงอะไรในรอบนี้ — โฟกัสอยู่ที่ช่องบาร์โค้ดแล้ว ยิงได้เลย"
+        : "เลือกโหมดก่อน แล้วรายการที่ยิงจะมาขึ้นที่นี่") + "</p>";
       return;
     }
     box.innerHTML = '<div class="s-recent">' + st.recent.map(function (r) {
@@ -904,12 +959,33 @@
     }
   }
 
+  /**
+     บาร์โค้ดที่จะเอาไปติดของชิ้นเดียว = ใบที่ยิงได้หนึ่งชิ้น (packQty 1)
+     ถ้าไม่มีก็เอาใบแรกที่เจอ แต่ต้องบอกจำนวนต่อใบกำกับไว้
+     ไม่งั้นคนเอาเลขของใบลังไปพิมพ์ติดของชิ้นเดียว แล้วยิงทีเดียวเข้าสิบสองชิ้น
+   */
+  function bcList(sku) {
+    var all = st.masterBarcodes.filter(function (b) { return b.sku === sku; });
+    var one = all.filter(function (b) { return Number(b.packQty) === 1; });
+    return one.concat(all.filter(function (b) { return Number(b.packQty) !== 1; }));
+  }
+
+  function bcCell(sku) {
+    var list = bcList(sku);
+    if (!list.length) return '<span class="sub">ยังไม่มีบาร์โค้ด</span>';
+    var main = list[0];
+    var pack = Number(main.packQty) || 1;
+    return '<button type="button" class="bc-copy" data-copy="' + esc(main.barcode)
+      + '" title="กดเพื่อคัดลอก">' + esc(main.barcode) + "</button>"
+      + (pack > 1 ? '<span class="sub">ใบนี้ยิงได้ ' + n0(pack) + " ชิ้น</span>" : "")
+      + (list.length > 1 ? '<span class="sub">+ อีก ' + (list.length - 1) + " ใบ</span>" : "");
+  }
+
   function renderMaster() {
     if (!canManage() || !st.master) return;
-    var bcCount = {};
-    st.masterBarcodes.forEach(function (b) { bcCount[b.sku] = (bcCount[b.sku] || 0) + 1; });
 
-    $("sPTotal").textContent = st.master.length + " รายการ · บาร์โค้ด " + st.masterBarcodes.length;
+    $("sPTotal").textContent = st.master.length + " รายการ · บาร์โค้ด " + st.masterBarcodes.length
+      + " · กดที่เลขบาร์โค้ดเพื่อคัดลอก";
     $("sImportCard").hidden = !(A.me() && A.me().role === "owner");
 
     if (!st.master.length) {
@@ -918,7 +994,7 @@
     }
 
     $("sPTable").innerHTML = "<table><thead><tr><th>สินค้า</th><th>หมวด</th>"
-      + '<th class="r">พร้อมขาย</th><th class="r">จุดสั่งซื้อ</th><th class="r">บาร์โค้ด</th><th></th>'
+      + '<th class="r">พร้อมขาย</th><th class="r">จุดสั่งซื้อ</th><th>บาร์โค้ด</th><th></th>'
       + "</tr></thead><tbody>"
       + st.master.map(function (m) {
           var live = st.bySku[m.sku];
@@ -929,7 +1005,7 @@
             + "<td>" + esc(m.category || "—") + "</td>"
             + '<td class="r num">' + (live ? n0(live.available) : "0") + "</td>"
             + '<td class="r num">' + n0(m.reorderPoint) + "</td>"
-            + '<td class="r num">' + n0(bcCount[m.sku] || 0) + "</td>"
+            + "<td>" + bcCell(m.sku) + "</td>"
             + '<td class="r"><button type="button" class="btn btn-ghost" data-edit="' + esc(m.sku) + '">แก้</button></td>'
             + "</tr>";
         }).join("")
@@ -2037,7 +2113,7 @@
 
     paintCam();
     if (id === "browse") { renderBrowse(); loadAlerts(true); loadMine(); }
-    if (id === "scan") { setMode(st.mode); loadPending(); paintTransfer(); }
+    if (id === "scan") { setMode(st.mode || lastMode()); loadPending(); paintTransfer(); }
     if (id === "wall") {
       loadBoard();
       // จอผนังไม่มีใครกด ตัวเลขยอดรวมของวันจึงต้องดึงเองเป็นระยะ
@@ -2162,6 +2238,12 @@
     if (b) setMode(b.getAttribute("data-mode"));
   });
 
+  // การ์ดเลือกโหมดครั้งแรก ปุ่มใหญ่ ๆ ที่มีคำอธิบายกำกับ
+  $("sPickMode").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button[data-mode]");
+    if (b) setMode(b.getAttribute("data-mode"));
+  });
+
   $("sCamBtn").addEventListener("click", function () {
     camOpen(function (code) { submitScan(code, { quietOk: true }); }, "sRecent");
   });
@@ -2227,7 +2309,36 @@
   $("sfSave").addEventListener("click", saveProduct);
   $("sfCancel").addEventListener("click", function () { fillProductForm(null); });
   $("sbSave").addEventListener("click", saveBarcode);
+  /**
+     คัดลอกเลขบาร์โค้ด — ไว้เอาไปพิมพ์ในช่องยิงตอนยังไม่มีฉลากติดของ
+     clipboard API ใช้ได้เฉพาะ https และต้องมีการแตะจอ ซึ่งการกดปุ่มนี้เข้าเงื่อนไขทั้งคู่
+     แต่ยังพลาดได้ (เบราว์เซอร์เก่า สิทธิ์ถูกปิด) จึงมีทางถอยเป็นเลือกข้อความให้
+   */
+  function copyCode(text, btn) {
+    var done = function () { A.toast("คัดลอก " + text + " แล้ว"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { selectText(btn, text); });
+    } else {
+      selectText(btn, text);
+    }
+  }
+
+  function selectText(btn, text) {
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(btn);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      A.toast("คัดลอกเองไม่ได้ — เลือกข้อความไว้ให้แล้ว กดคัดลอกอีกที");
+    } catch (e) {
+      A.toast("เลขบาร์โค้ดคือ " + text);
+    }
+  }
+
   $("sPTable").addEventListener("click", function (ev) {
+    var c = ev.target.closest("button[data-copy]");
+    if (c) { copyCode(c.getAttribute("data-copy"), c); return; }
     var b = ev.target.closest("button[data-edit]");
     if (!b) return;
     var sku = b.getAttribute("data-edit");
