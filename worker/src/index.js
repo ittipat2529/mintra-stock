@@ -611,6 +611,12 @@ async function stock(p, method, body, url, env, me, request) {
     return stockCall(env, "/barcodes/delete", "POST", withMe());
   }
 
+  /* --- ล้างข้อมูลทดสอบก่อนเริ่มใช้จริง เจ้าของเท่านั้น และย้อนกลับไม่ได้ --- */
+  if (p === "/api/stock/reset" && method === "POST") {
+    requireOwner(me);
+    return stockCall(env, "/reset", "POST", withMe());
+  }
+
   /* --- สร้างยอดใหม่จาก movements เจ้าของเท่านั้น --- */
   if (p === "/api/stock/rebuild" && method === "POST") {
     requireOwner(me);

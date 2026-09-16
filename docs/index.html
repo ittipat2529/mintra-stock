@@ -519,6 +519,19 @@
               <span class="spacer"></span>
               <span class="note" id="sToolNote"></span>
             </div>
+
+            <!-- ของที่ย้อนกลับไม่ได้ แยกกล่องออกมาและใช้สีเตือน
+                 ไม่ปนกับปุ่มอื่นในแถวเครื่องมือ เพราะกดพลาดแล้วประวัติหายหมด -->
+            <div class="body danger-box owner-only" id="sResetBox" hidden>
+              <b style="font-size:14px;color:var(--opex)">เริ่มใช้งานจริง — ล้างข้อมูลทดสอบ</b>
+              <p class="note" style="margin-top:8px">ทำครั้งเดียวก่อนเริ่มใช้จริง
+                <b>ย้อนกลับไม่ได้</b> · ยอดคงเหลือทุกตัวเป็นศูนย์ · ประวัติการยิง การจอง
+                รอบนับ บิลรับเข้า และต้นทุน หายทั้งหมด</p>
+              <p class="note" style="margin-top:6px"><b>ทะเบียนสินค้า บาร์โค้ด และคลัง ไม่ถูกลบ</b>
+                รวมถึงค่าตั้งอายุการจองและคำนำหน้ารหัสสินค้า</p>
+              <p class="note" id="sRsDone" style="margin-top:8px;color:var(--opex)" hidden></p>
+              <button type="button" class="btn btn-ghost" id="sResetBtn" style="width:100%;margin-top:13px">ล้างข้อมูลทดสอบ</button>
+            </div>
           </div>
         </div>
       </div>
@@ -564,6 +577,27 @@
 </div>
 
 <!-- ---------- กล่องเปลี่ยนรหัสผ่าน ---------- -->
+<!-- ---------- ยืนยันล้างข้อมูลทดสอบ ---------- -->
+<dialog id="sRsDlg" class="dlg">
+  <form method="dialog" class="dlg-in">
+    <h2 class="display">ล้างข้อมูลทดสอบ</h2>
+    <p class="note" style="margin:0 0 14px"><b style="color:var(--opex)">ย้อนกลับไม่ได้</b>
+      — ข้อมูลที่ลบไปเอาคืนไม่ได้ทั้งจากในระบบและจากที่ไหน</p>
+
+    <div class="tablewrap" id="sRsWhat"></div>
+
+    <div class="field">
+      <label class="lbl" for="sRsWord">พิมพ์คำว่า <b>ล้างข้อมูล</b> เพื่อยืนยัน</label>
+      <input type="text" id="sRsWord" autocomplete="off" spellcheck="false" placeholder="ล้างข้อมูล">
+    </div>
+
+    <div class="dlg-act">
+      <button type="button" class="btn btn-ghost" id="sRsCancel">ยกเลิก</button>
+      <button type="button" class="btn btn-main" id="sRsGo" style="margin:0;width:auto" disabled>ล้างข้อมูล</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="pwDlg" class="dlg">
   <form method="dialog" class="dlg-in">
     <h2 class="display">เปลี่ยนรหัสผ่าน</h2>

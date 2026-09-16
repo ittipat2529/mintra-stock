@@ -1320,3 +1320,12 @@ body.cam-on{overflow:hidden}
   .cam-box{height:112px;left:5%;right:5%}
   .cam-t b{font-size:17px}
 }
+
+/* กล่องของที่ย้อนกลับไม่ได้ — ต้องดูต่างจากปุ่มอื่นชัด ๆ
+   ไม่ใช่ปุ่มสีเดียวกับปุ่มปกติที่กดพลาดแล้วประวัติหายหมด */
+.danger-box{
+  border-top:1px solid var(--line);
+  background:var(--opex-bg);
+}
+.danger-box .btn-ghost{border-color:var(--opex);color:var(--opex)}
+.danger-box .btn-ghost:hover{background:var(--opex);color:#fff}

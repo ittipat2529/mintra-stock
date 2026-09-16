@@ -243,7 +243,19 @@ function bkkDay(now) {
 function newId(prefix) {
   return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
+/**
+ * ตัวเลขในช่วงที่กำหนด ถ้าไม่ส่งมาใช้ค่าเริ่มต้น
+ *
+ * ต้องดัก null กับสตริงว่างเองก่อน เพราะ Number(null) และ Number("") ได้ 0
+ * ซึ่งเป็นตัวเลขที่ finite แล้วโค้ดจะเดินต่อไปบีบมันขึ้นเป็นค่าต่ำสุด
+ * แทนที่จะคืนค่าเริ่มต้น — เท่ากับว่า "ไม่ส่งมา" กลายเป็น "ส่งค่าต่ำสุดมา"
+ *
+ * ที่เจอจริง — /movements ที่ไม่ส่ง limit ได้ limit=1 (ค่าต่ำสุด) ไม่ใช่ 40
+ * แสดงประวัติการยิงแค่รายการเดียว ทั้งที่ควรเห็นสี่สิบรายการ
+ * และ /reserve ที่ส่ง qty เป็นสตริงว่างจะจอง 1 ชิ้นเงียบ ๆ แทนที่จะฟ้องว่าไม่ใส่จำนวน
+ */
 function clampInt(v, min, max, dflt) {
+  if (v === null || v === undefined || v === "") return dflt;
   const n = Math.trunc(Number(v));
   if (!isFinite(n)) return dflt;
   return Math.min(Math.max(n, min), max);
@@ -1055,6 +1067,66 @@ export class StockRoom {
     };
   }
 
+  /**
+     ล้างข้อมูลทดสอบก่อนเริ่มใช้จริง — ยอดเป็นศูนย์ ประวัติหายหมด แต่ทะเบียนสินค้าอยู่ครบ
+     ตอนลองใช้ช่วงแรกจะมีการยิงเล่น ยอดติดลบ การจองค้าง รอบนับที่ไม่จบ
+     ถ้ายกของพวกนั้นเข้าวันเปิดใช้จริงด้วย ตัวเลขวันแรกจะผิดตั้งแต่ต้น
+     และไม่มีใครแยกออกว่าอะไรคือของจริงอะไรคือของลอง
+
+     ล้าง   ยอดคงเหลือ · การเคลื่อนไหว · การจอง · รอบนับ · บิลรับเข้า · คิวรอผูกบาร์โค้ด · ต้นทุน
+     เก็บ   ทะเบียนสินค้า · บาร์โค้ด · คลัง · ค่าตั้ง (อายุการจอง คำนำหน้ารหัส ตัวรันเลข)
+
+     ต้นทุนถูกล้างด้วย เพราะ costAvg คำนวณมาจาก movements — ลบ movements แล้วเก็บ costAvg ไว้
+     จะได้ตัวเลขที่ไม่มีอะไรรองรับ อธิบายที่มาไม่ได้ และจะถูกคิดใหม่ทับตอนรับเข้าครั้งแรกอยู่ดี
+
+     ไม่ล้างตัวรันเลขรหัสสินค้ากับบาร์โค้ด เพราะสินค้ายังถือรหัสเดิมอยู่
+     ถอยตัวนับกลับไปจะไปชนรหัสที่ถูกใช้แล้ว
+   */
+  #resetSync(p) {
+    // ต้องพิมพ์คำยืนยันมาให้ตรง กันคำขอที่หลุดมาโดยไม่มีเจตนา
+    if (str(p.confirm, 20) !== "RESET") {
+      return bad("ต้องยืนยันก่อนล้างข้อมูล", "NEED_CONFIRM");
+    }
+
+    const count = (sql) => {
+      const r = this.sql.exec(sql).toArray()[0];
+      return Number(r && r.n) || 0;
+    };
+    // นับก่อนลบ เพื่อบอกเจ้าของได้ว่าหายไปเท่าไร และอะไรที่ยังอยู่
+    const cleared = {
+      movements: count(`SELECT COUNT(*) AS n FROM movements`),
+      // บิลรับเข้าที่เจ้าของเห็นในหน้าบิล มาจากการจัดกลุ่ม movements ไม่ใช่ตาราง receipts
+      // ตาราง receipts เก็บแค่สถานะว่าบิลนั้นลงต้นทุนครบแล้วหรือยัง
+      receipts: count(
+        `SELECT COUNT(*) AS n FROM (
+           SELECT refId FROM movements WHERE type='receive' AND refId <> '' GROUP BY refId)`),
+      reservations: count(`SELECT COUNT(*) AS n FROM reservations`),
+      counts: count(`SELECT COUNT(*) AS n FROM counts`),
+      pending: count(`SELECT COUNT(*) AS n FROM pending_barcodes`),
+      stockRows: count(`SELECT COUNT(*) AS n FROM stock`)
+    };
+    const kept = {
+      products: count(`SELECT COUNT(*) AS n FROM products`),
+      barcodes: count(`SELECT COUNT(*) AS n FROM barcodes`),
+      locations: count(`SELECT COUNT(*) AS n FROM locations`)
+    };
+
+    this.sql.exec(`DELETE FROM count_scans`);
+    this.sql.exec(`DELETE FROM count_lines`);
+    this.sql.exec(`DELETE FROM counts`);
+    this.sql.exec(`DELETE FROM reservations`);
+    this.sql.exec(`DELETE FROM receipts`);
+    this.sql.exec(`DELETE FROM pending_barcodes`);
+    this.sql.exec(`DELETE FROM movements`);
+    this.sql.exec(`DELETE FROM stock`);
+    this.sql.exec(`UPDATE products SET costAvg = 0`);
+
+    this.#putSetting("resetAt", nowIso());
+    this.#putSetting("resetBy", str(p.userId, 40));
+
+    return { ok: true, cleared, kept, version: this.#bump() };
+  }
+
   /** มูลค่าสต็อก — เห็นได้เฉพาะหัวหน้าคลังขึ้นไป ไม่เคยอยู่ใน snapshot ที่ส่งให้ทุกคน */
   #value() {
     const rows = this.sql.exec(
@@ -1602,6 +1674,9 @@ export class StockRoom {
       return this.#json({
         products: this.#allProducts(),
         barcodes: this.sql.exec(`SELECT barcode, sku, packQty, label FROM barcodes ORDER BY sku`).toArray(),
+        // บอกว่าล้างข้อมูลทดสอบไปเมื่อไรและใครกด เจ้าของจะได้ไม่กดซ้ำเพราะไม่แน่ใจ
+        resetAt: this.#settingStr("resetAt", ""),
+        resetBy: this.#settingStr("resetBy", ""),
         ...this.#previewCodes()
       });
     }
@@ -1864,6 +1939,13 @@ export class StockRoom {
     if (path === "/receipt") {
       const res = this.#receiptLines(str(url.searchParams.get("refId"), 60));
       return this.#json(res, res.__error && res.__error.status);
+    }
+
+    if (path === "/reset" && request.method === "POST") {
+      const res = this.#resetSync(body);
+      if (res.__error) return this.#json(res, res.__error.status);
+      this.#broadcast({ t: "reload", version: res.version });
+      return this.#json(res);
     }
 
     if (path === "/cost" && request.method === "POST") {

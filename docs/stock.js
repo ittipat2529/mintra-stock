@@ -242,7 +242,7 @@
       }
 
       if (m.t === "snapshot") { takeSnapshot(m); return; }
-      if (m.t === "reload") { resync(); return; }
+      if (m.t === "reload") { hardReload(); return; }
       if (m.t === "pong") { st.lastSync = Date.now(); paintConn(); }
     };
 
@@ -260,6 +260,25 @@
   function resync() {
     if (st.ws && st.ws.readyState === 1) { st.ws.send(JSON.stringify({ t: "resync" })); return; }
     fetchSnapshot();
+  }
+
+  /**
+     "reload" ต่างจากยอดที่ขยับทีละใบ มันหมายว่ามีคนเปลี่ยนของทั้งก้อน —
+     ล้างข้อมูลทดสอบ · ตั้งต้นทุนย้อนหลัง · สร้างยอดใหม่จากประวัติ
+
+     ยอดคงเหลือมาทาง snapshot อยู่แล้ว แต่การ์ดของใกล้หมด การจองของฉัน และจอผนัง
+     เป็นคนละคำขอและมีตัวหน่วงกันดึงถี่ ถ้าไม่บังคับดึงใหม่ที่นี่ จอที่เปิดค้างไว้จะโชว์
+     "ยอดติดลบ -2 รายการ" อยู่ข้างตารางที่บอกว่า 0 ซึ่งเป็นการขัดกันเองในจอเดียว
+     คนที่เห็นจะเลิกเชื่อตัวเลขทั้งหน้า
+   */
+  function hardReload() {
+    resync();
+    loadAlerts(true);
+    loadMine();
+    if (st.pane === "wall") loadBoard();
+    if (st.pane === "products") loadMaster();
+    if (st.pane === "cost") loadCost();
+    if (st.pane === "count") loadCounts();
   }
 
   function startPolling() {
@@ -918,7 +937,10 @@
     return A.api("/stock/products").then(function (d) {
       st.master = d.products || [];
       st.masterBarcodes = d.barcodes || [];
+      st.resetAt = d.resetAt || "";
+      st.resetBy = d.resetBy || "";
       takeCodes(d);
+      paintResetBox();
       renderMaster();
     }).catch(A.handleErr);
   }
@@ -986,7 +1008,9 @@
 
     $("sPTotal").textContent = st.master.length + " รายการ · บาร์โค้ด " + st.masterBarcodes.length
       + " · กดที่เลขบาร์โค้ดเพื่อคัดลอก";
-    $("sImportCard").hidden = !(A.me() && A.me().role === "owner");
+    var isOwner = !!(A.me() && A.me().role === "owner");
+    $("sImportCard").hidden = !isOwner;
+    $("sResetBox").hidden = !isOwner;
 
     if (!st.master.length) {
       $("sPTable").innerHTML = '<p class="empty">ยังไม่มีสินค้า — เพิ่มทางฟอร์มซ้าย หรือนำเข้าจาก CSV</p>';
@@ -2269,6 +2293,74 @@
     st.reason = r.value;
     renderReasons();
     focusCode();
+  });
+
+  /* ---------- ล้างข้อมูลทดสอบก่อนเริ่มใช้จริง ---------- */
+
+  var RESET_WORD = "ล้างข้อมูล";
+
+  /* เคยล้างไปแล้วเมื่อไร ใครกด — กันเจ้าของกดซ้ำเพราะจำไม่ได้ว่าล้างแล้วยัง */
+  function paintResetBox() {
+    var note = $("sRsDone");
+    if (!note) return;
+    if (!st.resetAt) { note.hidden = true; note.textContent = ""; return; }
+    var d = new Date(st.resetAt), p = function (x) { return (x < 10 ? "0" : "") + x; };
+    var txt = isNaN(d) ? st.resetAt
+      : p(d.getDate()) + "/" + p(d.getMonth() + 1) + "/" + d.getFullYear()
+        + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    note.hidden = false;
+    note.textContent = "เคยล้างไปแล้ว " + txt + (st.resetBy ? " โดย " + st.resetBy : "")
+      + " — ถ้าเริ่มใช้จริงไปแล้ว กดซ้ำจะทำให้ยอดจริงหายทั้งหมด";
+  }
+
+  function openReset() {
+    /* บอกตัวเลขจริงที่จะหายไปก่อนถาม ไม่ใช่ถามลอย ๆ ว่าแน่ใจไหม
+       คนกดจะได้เห็นว่ากำลังทิ้งอะไรอยู่ และเห็นว่าอะไรจะไม่หาย */
+    var tot = (st.products || []).reduce(function (a, p) { return a + (Number(p.onHand) || 0); }, 0);
+    $("sRsWhat").innerHTML = "<table><tbody>"
+      + '<tr><td>ยอดคงเหลือรวมทุกตัว</td><td class="r num">' + n0(tot) + " → 0</td></tr>"
+      + '<tr><td>การจองที่ยังเปิดอยู่</td><td class="r num">' + n0((st.mine || []).length) + " → 0</td></tr>"
+      + '<tr><td>ประวัติการยิง · รอบนับ · บิลรับเข้า · ต้นทุน</td><td class="r">ลบทั้งหมด</td></tr>'
+      + '<tr><td><b>ทะเบียนสินค้า</b></td><td class="r num"><b>' + n0((st.master || st.products || []).length)
+      +   " รายการ — ไม่ลบ</b></td></tr>"
+      + '<tr><td><b>บาร์โค้ด และคลัง</b></td><td class="r"><b>ไม่ลบ</b></td></tr>'
+      + "</tbody></table>";
+    $("sRsWord").value = "";
+    $("sRsGo").disabled = true;
+    $("sRsDlg").showModal();
+    setTimeout(function () { $("sRsWord").focus(); }, 30);
+  }
+
+  function doReset() {
+    if ($("sRsWord").value.trim() !== RESET_WORD) return;
+    A.setBusy(true, $("sRsGo"), "กำลังล้าง…");
+    A.api("/stock/reset", "POST", { confirm: "RESET" }).then(function (r) {
+      $("sRsDlg").close();
+      var c = r.cleared || {}, k = r.kept || {};
+      A.toast("ล้างข้อมูลทดสอบแล้ว — ลบการเคลื่อนไหว " + n0(c.movements)
+        + " รายการ · เก็บทะเบียนสินค้า " + n0(k.products) + " รายการไว้");
+      $("sToolNote").textContent = "ล้างข้อมูลทดสอบเรียบร้อย เริ่มใช้จริงได้เลย"
+        + " — ลบการเคลื่อนไหว " + n0(c.movements) + " · บิลรับเข้า " + n0(c.receipts)
+        + " · การจอง " + n0(c.reservations) + " · รอบนับ " + n0(c.counts)
+        + " · คิวรอผูกบาร์โค้ด " + n0(c.pending)
+        + " / เก็บสินค้า " + n0(k.products) + " · บาร์โค้ด " + n0(k.barcodes)
+        + " · คลัง " + n0(k.locations);
+      st.recent = [];
+      st.tally = 0;
+      $("sTally").textContent = "0";
+      renderRecent();
+      return Promise.all([fetchSnapshot(), loadMaster(), loadMine(), loadAlerts(true)]);
+    }).catch(A.handleErr).then(function () {
+      A.setBusy(false, $("sRsGo"), "ล้างข้อมูล");
+    });
+  }
+
+  $("sResetBtn").addEventListener("click", openReset);
+  $("sRsCancel").addEventListener("click", function () { $("sRsDlg").close(); });
+  $("sRsGo").addEventListener("click", doReset);
+  $("sRsWord").addEventListener("input", function () {
+    // ปุ่มกดไม่ได้จนพิมพ์ตรงคำ ไม่ใช่กดได้แล้วค่อยฟ้องทีหลัง
+    $("sRsGo").disabled = this.value.trim() !== RESET_WORD;
   });
 
   /* ---------- ค่าตั้งอายุการจอง ---------- */
