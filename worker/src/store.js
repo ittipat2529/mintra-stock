@@ -18,6 +18,16 @@ export class HttpError extends Error {
 }
 
 async function gh(env, path, opts = {}) {
+  /* ไม่มี token ตั้งแต่ต้น กับ มี token แต่ GitHub ปฏิเสธ เป็นสองเรื่องที่แก้คนละทาง
+     ถ้าไม่ดักตรงนี้ คำขอจะถูกส่งไปพร้อมหัวข้อ "Bearer undefined" แล้วได้ 401 กลับมา
+     ซึ่งหน้าตาเหมือน token หมดอายุเป๊ะ — คนแก้จะไปนั่งสร้าง token ใหม่ทั้งที่
+     ปัญหาคือยังไม่ได้ใส่ลง Worker เลย (เช่นหลัง deploy ที่ทำ secret หาย) */
+  if (!env.GITHUB_TOKEN) {
+    throw new HttpError(500,
+      "ยังไม่ได้ใส่ GITHUB_TOKEN ให้ Worker — ให้เจ้าของรัน wrangler secret put GITHUB_TOKEN",
+      "NO_TOKEN");
+  }
+
   const res = await fetch(API + path, {
     method: opts.method || "GET",
     headers: {
@@ -36,8 +46,19 @@ async function gh(env, path, opts = {}) {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     const msg = (body && body.message) || "เชื่อมต่อฐานข้อมูลไม่สำเร็จ";
-    if (res.status === 401 || res.status === 403) {
-      throw new HttpError(500, "ระบบเข้าถึงฐานข้อมูลไม่ได้ — ให้เจ้าของตรวจ GITHUB_TOKEN", "STORE_AUTH");
+    /* แยก 401 กับ 403 เพราะทางแก้ไม่เหมือนกัน
+         401  token ผิดหรือหมดอายุ → สร้างใหม่
+         403  token ถูกแต่ไม่มีสิทธิ์รีโปนี้ หรือโดนจำกัดจำนวนคำขอ → แก้สิทธิ์หรือรอ */
+    if (res.status === 401) {
+      throw new HttpError(500,
+        "GITHUB_TOKEN ใช้ไม่ได้หรือหมดอายุ — ให้เจ้าของสร้าง token ใหม่แล้วใส่อีกครั้ง",
+        "TOKEN_BAD");
+    }
+    if (res.status === 403) {
+      throw new HttpError(500,
+        "GITHUB_TOKEN ไม่มีสิทธิ์เขียนรีโป " + repo(env)
+          + " — ต้องให้สิทธิ์ Contents: Read and write" + (msg ? " (" + msg + ")" : ""),
+        "TOKEN_SCOPE");
     }
     throw new HttpError(502, msg, "STORE_ERROR");
   }
