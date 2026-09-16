@@ -400,6 +400,14 @@
               <label class="lbl" for="sfRop">จุดสั่งซื้อ — ต่ำกว่านี้ถือว่าใกล้หมด</label>
               <input type="number" id="sfRop" class="num" min="0" step="1" value="0">
             </div>
+
+            <!-- เติมต้นทุนย้อนหลังได้ที่นี่ สำหรับของที่รับเข้าไปแล้วโดยไม่ได้ใส่ราคา -->
+            <div class="field" id="sfCostWrap" hidden>
+              <label class="lbl" for="sfCost">ต้นทุนต่อหน่วย (บาท)</label>
+              <input type="number" id="sfCost" class="num" min="0" step="0.01" placeholder="เช่น 72.50">
+              <p class="note" id="sfCostNote" style="margin-top:6px"></p>
+              <button type="button" class="btn btn-ghost" id="sfCostSave" style="width:100%;margin-top:10px">บันทึกต้นทุน</button>
+            </div>
             <label class="remember" style="margin-top:13px">
               <input type="checkbox" id="sfActive" checked> ยังขายอยู่
             </label>
@@ -438,6 +446,7 @@
         <div style="display:grid;gap:20px;min-width:0">
           <div class="card">
             <h2>ทะเบียนสินค้า <span class="note" id="sPTotal"></span></h2>
+            <div class="banner" id="sPNoCost" data-tone="warn" hidden style="margin:0 20px 16px"></div>
             <div class="tablewrap" id="sPTable"></div>
           </div>
           <div class="card">

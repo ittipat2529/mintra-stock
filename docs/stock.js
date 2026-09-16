@@ -993,8 +993,17 @@
       return;
     }
 
+    var noCost = st.master.filter(function (m) { return !(Number(m.costAvg) > 0); });
+    $("sPNoCost").hidden = !noCost.length;
+    if (noCost.length) {
+      $("sPNoCost").innerHTML = "<b>" + noCost.length + " รายการยังไม่มีต้นทุน</b> "
+        + "จึงไม่ถูกนับในมูลค่าสต็อก — กด <b>แก้</b> ที่แถวนั้นแล้วใส่ต้นทุนต่อหน่วย<br>"
+        + noCost.slice(0, 8).map(function (m) { return esc(m.name); }).join(" · ")
+        + (noCost.length > 8 ? " · และอีก " + (noCost.length - 8) : "");
+    }
+
     $("sPTable").innerHTML = "<table><thead><tr><th>สินค้า</th><th>หมวด</th>"
-      + '<th class="r">พร้อมขาย</th><th class="r">จุดสั่งซื้อ</th><th>บาร์โค้ด</th><th></th>'
+      + '<th class="r">พร้อมขาย</th><th class="r">ต้นทุน/หน่วย</th><th>บาร์โค้ด</th><th></th>'
       + "</tr></thead><tbody>"
       + st.master.map(function (m) {
           var live = st.bySku[m.sku];
@@ -1004,7 +1013,8 @@
             + (m.active ? "" : " · ปิดใช้งาน") + "</span></td>"
             + "<td>" + esc(m.category || "—") + "</td>"
             + '<td class="r num">' + (live ? n0(live.available) : "0") + "</td>"
-            + '<td class="r num">' + n0(m.reorderPoint) + "</td>"
+            + '<td class="r num">' + (Number(m.costAvg) > 0 ? A.baht(m.costAvg)
+                : '<span class="pill p-cost"><i class="dot"></i>ยังไม่มี</span>') + "</td>"
             + "<td>" + bcCell(m.sku) + "</td>"
             + '<td class="r"><button type="button" class="btn btn-ghost" data-edit="' + esc(m.sku) + '">แก้</button></td>'
             + "</tr>";
@@ -1026,7 +1036,59 @@
     $("sfCat").value = m ? (m.category || "") : "";
     $("sfRop").value = m ? m.reorderPoint : 0;
     $("sfActive").checked = m ? !!m.active : true;
+    paintSkuCost(m);
     if (m) $("sbSku").value = m.sku;
+  }
+
+  /**
+     ต้นทุนของสินค้าทั้งตัว — ตั้งได้เฉพาะตอนแก้ของที่มีอยู่แล้ว
+     ตอนเพิ่มสินค้าใหม่ยังไม่มีการรับเข้าให้เขียนต้นทุนลงไป
+     และช่องต้นทุนของหน้ายิงรับเข้าทำงานนั้นอยู่แล้ว
+   */
+  function paintSkuCost(m) {
+    var box = $("sfCostWrap");
+    if (!box) return;
+    box.hidden = !m;
+    if (!m) { $("sfCost").value = ""; return; }
+
+    var cur = Number(m.costAvg) || 0;
+    var blank = Number(m.uncostedReceives) || 0;
+    var costed = Number(m.costedReceives) || 0;
+
+    $("sfCost").value = cur > 0 ? cur : "";
+
+    /* สามทางที่เซิร์ฟเวอร์จะทำ ต้องเขียนให้ตรงกับที่มันทำจริง
+       ไม่งั้นหน้าเว็บสัญญาอย่างหนึ่งแล้วเซิร์ฟเวอร์ปฏิเสธอีกอย่าง */
+    if (blank > 0) {
+      $("sfCostSave").disabled = false;
+      $("sfCostNote").textContent = (cur > 0 ? "ถัวเฉลี่ยอยู่ที่ " + A.baht(cur) + " · " : "ยังไม่มีต้นทุน · ")
+        + "มีการรับเข้าที่ยังไม่ใส่ต้นทุน " + n0(blank) + " รายการ — ใส่ราคาแล้วกดบันทึก "
+        + "ระบบจะเติมให้ทุกรายการนั้นแล้วคิดถัวเฉลี่ยใหม่";
+    } else if (costed > 0) {
+      // ต้นทุนของบิลที่ผ่านมาเป็นข้อเท็จจริงทางบัญชี ทับจากที่นี่ไม่ได้ ปิดปุ่มไปเลย
+      $("sfCostSave").disabled = true;
+      $("sfCostNote").textContent = "ถัวเฉลี่ยอยู่ที่ " + A.baht(cur)
+        + " ซึ่งมาจากบิลรับเข้าทั้งหมด — แก้ที่บิลนั้นในแท็บต้นทุนและมูลค่า ตั้งจากที่นี่ไม่ได้";
+    } else {
+      $("sfCostSave").disabled = false;
+      $("sfCostNote").textContent = "ยังไม่มีการรับเข้าเลย (ของเข้าระบบทางปรับยอด) — "
+        + "ใส่ราคาที่ซื้อมาต่อหน่วยได้เลย · พอมีบิลรับเข้าที่มีต้นทุนจริงเข้ามา ระบบจะคิดจากบิลนั้นแทน";
+    }
+  }
+
+  function saveSkuCost() {
+    if (!st.editSku) { A.toast("เลือกสินค้าที่จะตั้งต้นทุนก่อน"); return; }
+    var v = $("sfCost").value.trim();
+    if (v === "" || !isFinite(Number(v)) || Number(v) < 0) { A.toast("ใส่ต้นทุนต่อหน่วยให้ถูกต้อง"); return; }
+    A.setBusy(true, $("sfCostSave"), "กำลังบันทึก…");
+    A.api("/stock/cost", "POST", { sku: st.editSku, costPerUnit: Number(v) }).then(function (r) {
+      A.toast(r.applied === "movements"
+        ? "ใส่ต้นทุนให้การรับเข้าที่ยังว่าง " + n0(r.filled) + " รายการ · ถัวเฉลี่ยเป็น " + A.baht(r.costAvg)
+        : "ตั้งต้นทุน " + A.baht(r.costAvg) + " ให้ " + r.sku + " แล้ว");
+      return Promise.all([loadMaster(), st.pane === "cost" ? loadCost() : null]);
+    }).catch(A.handleErr).then(function () {
+      A.setBusy(false, $("sfCostSave"), "บันทึกต้นทุน");
+    });
   }
 
   function saveProduct() {
@@ -2307,6 +2369,7 @@
 
   /* ---------- ทะเบียนสินค้า ---------- */
   $("sfSave").addEventListener("click", saveProduct);
+  $("sfCostSave").addEventListener("click", saveSkuCost);
   $("sfCancel").addEventListener("click", function () { fillProductForm(null); });
   $("sbSave").addEventListener("click", saveBarcode);
   /**

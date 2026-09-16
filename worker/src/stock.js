@@ -993,6 +993,68 @@ export class StockRoom {
     return costAvg;
   }
 
+  /**
+     ตั้งต้นทุนของสินค้าทั้งตัว — ทางเติมต้นทุนย้อนหลังเมื่อรับของเข้าไปแล้วโดยไม่ใส่ราคา
+     เดิมต้นทุนเติมได้ทางเดียวคือเปิดบิลรับเข้า ซึ่งใช้ไม่ได้ถ้าตอนยิงไม่ได้ใส่เลขบิล
+     หรือของเข้าระบบมาทางปรับยอด — สินค้าตัวนั้นจะไม่มีต้นทุนตลอดไปและไม่ถูกนับในมูลค่าสต็อก
+
+     costAvg เป็นค่าที่ **คำนวณมาจาก movements** ไม่ใช่ค่าที่เก็บไว้ลอย ๆ
+     ถ้าเขียนทับตรง ๆ การรับเข้าครั้งถัดไปจะคิดใหม่จาก movements แล้วค่าที่ตั้งมือไว้หายเงียบ ๆ
+     จึงเขียนต้นทุนลงบน "การรับเข้าที่ยังไม่มีต้นทุน" ให้แทน แล้วปล่อยให้สูตรเดิมคิดเอง
+     ผลที่ได้จึงอยู่ทน และเข้ากับตรรกะถัวเฉลี่ยทั้งระบบโดยไม่ต้องมีข้อยกเว้น
+   */
+  #setSkuCostSync(p) {
+    const sku = str(p.sku, 40).toUpperCase();
+    const prod = this.sql.exec(`SELECT sku, name FROM products WHERE sku=?`, sku).toArray()[0];
+    if (!prod) return bad("ไม่พบสินค้ารหัสนี้", "NOT_FOUND");
+
+    const c = Number(p.costPerUnit);
+    if (!isFinite(c) || c < 0 || c > 1e9) return bad("ต้นทุนต่อหน่วยไม่ถูกต้อง");
+    const cost = Math.round(c * 10000) / 10000;
+
+    const blank = this.sql.exec(
+      `SELECT COUNT(*) AS n FROM movements
+        WHERE sku=? AND type='receive' AND qty > 0 AND costPerUnit IS NULL`, sku).toArray()[0];
+    const blankCount = Number(blank && blank.n) || 0;
+
+    if (blankCount > 0) {
+      this.sql.exec(
+        `UPDATE movements SET costPerUnit=?
+          WHERE sku=? AND type='receive' AND qty > 0 AND costPerUnit IS NULL`, cost, sku);
+      const costAvg = this.#recomputeCost(sku);
+      return {
+        ok: true, sku, name: prod.name, applied: "movements",
+        filled: blankCount, costAvg, version: this.#bump()
+      };
+    }
+
+    /* ไม่มีการรับเข้าที่ว่างอยู่ แต่มีที่ใส่ต้นทุนไว้แล้ว
+       ต้นทุนของบิลที่ผ่านมาเป็นข้อเท็จจริงทางบัญชี เขียนทับทั้งหมดจากที่นี่ไม่ถูก
+       ต้องไปแก้ที่บิลนั้น ๆ จึงบอกเลขบิลไปให้เลยว่าต้องไปเปิดใบไหน */
+    const costed = this.sql.exec(
+      `SELECT DISTINCT refId FROM movements
+        WHERE sku=? AND type='receive' AND qty > 0 AND costPerUnit IS NOT NULL
+          AND refId <> '' LIMIT 5`, sku).toArray();
+    const anyCosted = this.sql.exec(
+      `SELECT COUNT(*) AS n FROM movements
+        WHERE sku=? AND type='receive' AND qty > 0 AND costPerUnit IS NOT NULL`, sku).toArray()[0];
+
+    if ((Number(anyCosted && anyCosted.n) || 0) > 0) {
+      const bills = costed.map(r => r.refId).join(", ");
+      return bad("สินค้าตัวนี้มีต้นทุนจากบิลรับเข้าอยู่แล้ว แก้ได้ที่บิลนั้น"
+        + (bills ? " — บิล " + bills : " (บิลไม่มีเลขอ้างอิง)"), "HAS_RECEIPTS");
+    }
+
+    /* ไม่มีการรับเข้าเลย เช่นของเข้าระบบมาทางปรับยอด — ไม่มีสูตรไหนมาคิดทับ
+       เขียน costAvg ตรง ๆ ได้ แต่ต้องรู้ว่าพอมีบิลรับเข้าที่มีต้นทุนจริงเข้ามา
+       สูตรจะคิดใหม่จากบิลนั้นและทับค่านี้ ซึ่งถูกต้องแล้ว บิลจริงชนะเลขที่พิมพ์เอง */
+    this.sql.exec(`UPDATE products SET costAvg=? WHERE sku=?`, cost, sku);
+    return {
+      ok: true, sku, name: prod.name, applied: "direct",
+      filled: 0, costAvg: cost, version: this.#bump()
+    };
+  }
+
   /** มูลค่าสต็อก — เห็นได้เฉพาะหัวหน้าคลังขึ้นไป ไม่เคยอยู่ใน snapshot ที่ส่งให้ทุกคน */
   #value() {
     const rows = this.sql.exec(
@@ -1804,6 +1866,13 @@ export class StockRoom {
       return this.#json(res, res.__error && res.__error.status);
     }
 
+    if (path === "/cost" && request.method === "POST") {
+      const res = this.#setSkuCostSync(body);
+      if (res.__error) return this.#json(res, res.__error.status);
+      this.#broadcast({ t: "reload", version: res.version });
+      return this.#json(res);
+    }
+
     if (path === "/receipt/cost" && request.method === "POST") {
       const res = this.#setCostSync(body);
       if (res.__error) return this.#json(res, res.__error.status);
@@ -1867,10 +1936,22 @@ export class StockRoom {
     return this.#json({ error: "ไม่รู้จักคำสั่งนี้" }, 404);
   }
 
+  /**
+     ส่งจำนวนการรับเข้าที่มี/ไม่มีต้นทุนไปด้วย เพื่อให้หน้าเว็บรู้ว่าจะตั้งต้นทุนได้ทางไหน
+     ไม่งั้นหน้าเว็บต้องเดา แล้วจะเขียนคำอธิบายที่เซิร์ฟเวอร์ไม่ทำตาม
+     เช่นบอกว่า "ใส่ค่าใหม่เพื่อทับ" ทั้งที่ของตัวนั้นมีต้นทุนจากบิลแล้วและจะถูกปฏิเสธ
+   */
   #allProducts() {
     return this.sql.exec(
-      `SELECT sku, name, unit, category, reorderPoint, costAvg, active, createdAt, updatedAt
-         FROM products ORDER BY name`).toArray();
+      `SELECT p.sku, p.name, p.unit, p.category, p.reorderPoint, p.costAvg,
+              p.active, p.createdAt, p.updatedAt,
+              (SELECT COUNT(*) FROM movements m
+                 WHERE m.sku = p.sku AND m.type = 'receive' AND m.qty > 0
+                   AND m.costPerUnit IS NULL) AS uncostedReceives,
+              (SELECT COUNT(*) FROM movements m
+                 WHERE m.sku = p.sku AND m.type = 'receive' AND m.qty > 0
+                   AND m.costPerUnit IS NOT NULL) AS costedReceives
+         FROM products p ORDER BY p.name`).toArray();
   }
 
   #json(data, status) {

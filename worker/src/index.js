@@ -538,6 +538,12 @@ async function stock(p, method, body, url, env, me, request) {
     return stockCall(env, "/receipt?refId=" + encodeURIComponent(url.searchParams.get("refId") || ""));
   }
 
+  /* --- ตั้งต้นทุนของสินค้าทั้งตัว ทางเติมย้อนหลังเมื่อรับเข้าไปแล้วไม่ได้ใส่ราคา --- */
+  if (p === "/api/stock/cost" && method === "POST") {
+    requireStockManager(role);
+    return stockCall(env, "/cost", "POST", withMe());
+  }
+
   if (p === "/api/stock/receipt/cost" && method === "POST") {
     requireStockManager(role);
     return stockCall(env, "/receipt/cost", "POST", withMe());
