@@ -1,17 +1,95 @@
 {
   "date": "2026-09-16",
-  "version": 20,
+  "version": 108,
   "balance": [
     {
       "sku": "MT-0001",
       "locationId": "main",
-      "onHand": -5,
+      "onHand": 271,
       "reserved": 0
     },
     {
       "sku": "MT-0002",
       "locationId": "main",
-      "onHand": 26,
+      "onHand": 588,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0003",
+      "locationId": "main",
+      "onHand": 499,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0004",
+      "locationId": "main",
+      "onHand": 553,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0005",
+      "locationId": "main",
+      "onHand": 41,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0006",
+      "locationId": "main",
+      "onHand": 43,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0007",
+      "locationId": "main",
+      "onHand": 70,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0008",
+      "locationId": "main",
+      "onHand": 30,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0009",
+      "locationId": "main",
+      "onHand": 106,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0010",
+      "locationId": "main",
+      "onHand": 71,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0011",
+      "locationId": "main",
+      "onHand": 60,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0012",
+      "locationId": "main",
+      "onHand": 15,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0013",
+      "locationId": "main",
+      "onHand": 7,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0014",
+      "locationId": "main",
+      "onHand": 17,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0015",
+      "locationId": "main",
+      "onHand": 6,
       "reserved": 0
     }
   ],
