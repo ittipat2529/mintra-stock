@@ -14,11 +14,11 @@
       "username": "phim",
       "name": "พิมพ์พจี  จันทโรทัย",
       "role": "sales",
-      "salt": "P1wMGBb222V1Xhn52iliwg",
-      "hash": "pLtz8YeDVHC340sGRcBmIvCTJOxy6VkLrhgTj0vlcyQ",
+      "salt": "d0R3T7XTn3g1SNOQ6p37aw",
+      "hash": "Q5YmBHpIGLUUPkSNR9yoCFA6s2_Z0mp5GcTofK--tt4",
       "iterations": 20000,
       "createdAt": "2026-09-16T02:23:21.187Z",
-      "mustChangePassword": true
+      "mustChangePassword": false
     },
     {
       "username": "waran",
