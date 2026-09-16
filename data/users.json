@@ -59,6 +59,16 @@
       "iterations": 20000,
       "createdAt": "2026-09-16T09:43:39.828Z",
       "mustChangePassword": true
+    },
+    {
+      "username": "saw",
+      "name": "อาภรณ์ ชุมแสง",
+      "role": "sales",
+      "salt": "nSrmxFm_fJsknksxRWZAEg",
+      "hash": "h3rWk_zufnb7fx4Mt78W1R3LzvY2RoHmmPGv5RwSLbI",
+      "iterations": 20000,
+      "createdAt": "2026-09-16T09:44:44.901Z",
+      "mustChangePassword": true
     }
   ]
 }
