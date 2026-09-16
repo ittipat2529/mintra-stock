@@ -44,11 +44,11 @@
       "username": "savarack",
       "name": "สวรารชย์ โกบยาหยัง",
       "role": "manager",
-      "salt": "TEsEYy3MrQ6qZNRtg9WGoA",
-      "hash": "IIytF3dJBV9uhPBh8qbUtCMo6TJugOlHB6KQc6QCkPc",
+      "salt": "8jEpQOWa3FEPZmOh5y2Aiw",
+      "hash": "GhUJiV5We1u7sCl0RUcJhS9xOP0tTD3I6sWmhw9Ons8",
       "iterations": 20000,
       "createdAt": "2026-09-16T03:52:34.607Z",
-      "mustChangePassword": true
+      "mustChangePassword": false
     }
   ]
 }
