@@ -65,25 +65,50 @@
 
   /* ================= คุยกับ Worker ================= */
 
+  /**
+     เน็ตไปไม่ถึงเซิร์ฟเวอร์ กับ เซิร์ฟเวอร์ตอบว่าไม่ผ่าน เป็นสองเรื่องที่แก้คนละทาง
+     จึงต้องแยกให้ออกตั้งแต่ต้นทาง ไม่ใช่รวมเป็น "เชื่อมต่อไม่สำเร็จ" ก้อนเดียว
+     err.offline = ไปไม่ถึง · err.status = ถึงแล้วแต่ถูกปฏิเสธ
+   */
   function api(path, method, body) {
     return fetch("/api" + path, {
       method: method || "GET",
       credentials: "same-origin",
       headers: body ? { "Content-Type": "application/json" } : undefined,
       body: body ? JSON.stringify(body) : undefined
+    }).catch(function (netErr) {
+      var e = new Error("เครื่องนี้ต่อไปไม่ถึงเซิร์ฟเวอร์");
+      e.offline = true;
+      e.cause = netErr && netErr.message;
+      throw e;
     }).then(function (r) {
-      return r.json().catch(function () { return {}; }).then(function (data) {
-        if (r.ok) return data;
-        var e = new Error(data.error || "เชื่อมต่อไม่สำเร็จ");
-        e.status = r.status;
-        e.code = data.code;
-        throw e;
+      return r.text().then(function (raw) {
+        var data = null;
+        try { data = JSON.parse(raw); } catch (e) { data = null; }
+
+        if (r.ok && data) return data;
+
+        // ตอบ 200 แต่ไม่ใช่ JSON = มีอะไรมาแทรกกลางทาง เช่นหน้า error ของตัวกลาง
+        if (r.ok) {
+          var bad = new Error("เซิร์ฟเวอร์ตอบกลับเป็นข้อมูลที่อ่านไม่ออก");
+          bad.status = r.status;
+          bad.raw = raw.slice(0, 200);
+          throw bad;
+        }
+
+        // ไม่ใส่เลข HTTP ในข้อความ เพราะฝั่งที่แสดงผลต่อท้ายเลขให้อยู่แล้ว
+        var err = new Error((data && data.error) || "เซิร์ฟเวอร์ปฏิเสธคำขอ");
+        err.status = r.status;
+        err.code = data && data.code;
+        if (!data) err.raw = raw.slice(0, 200);
+        throw err;
       });
     });
   }
 
   function handleErr(err) {
     if (err && err.status === 401) { showGate("หมดเวลาใช้งาน กรุณาเข้าสู่ระบบใหม่"); return; }
+    if (err && err.offline) { toast("เน็ตหลุด — คำสั่งนี้ยังไม่ถูกบันทึก"); return; }
     toast((err && err.message) || "เชื่อมต่อไม่สำเร็จ");
   }
 
@@ -143,8 +168,20 @@
       $("loginForm").hidden = !!r.needsSetup;
       gateMsg("");
       if (!r.needsSetup) return loadState().catch(function () { /* ยังไม่ล็อกอิน ปกติ */ });
-    }).catch(function () {
-      gateMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองรีเฟรชหน้าอีกครั้ง", true);
+    }).catch(function (err) {
+      /* เดิมตรงนี้กลืน error ทิ้งแล้วขึ้นว่า "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" ทุกกรณี
+         ซึ่งทำให้แยกไม่ออกเลยว่าเน็ตหลุด หรือเซิร์ฟเวอร์พัง หรือ token ผิด
+         คนที่เจอหน้านี้คือคนที่เข้าระบบไม่ได้ เขาต้องได้เบาะแสพอจะบอกช่างได้ */
+      if (err && err.offline) {
+        gateMsg("เครื่องนี้ต่อไปไม่ถึงเซิร์ฟเวอร์ — เช็คเน็ตแล้วรีเฟรชหน้าอีกครั้ง", true);
+        return;
+      }
+      var detail = err && err.status ? " (HTTP " + err.status
+        + (err.code ? " · " + err.code : "") + ")" : "";
+      gateMsg(((err && err.message) || "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้") + detail
+        + " — ลองรีเฟรชหน้าอีกครั้ง", true);
+      // รายละเอียดเต็มไว้ให้เปิด console ดูได้ ไม่เอามาโชว์บนหน้าจอให้รก
+      try { console.error("boot /api/setup ล้มเหลว", err, err && err.raw); } catch (e) {}
     });
   }
 
