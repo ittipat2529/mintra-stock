@@ -64,11 +64,11 @@
       "username": "saw",
       "name": "อาภรณ์ ชุมแสง",
       "role": "sales",
-      "salt": "nSrmxFm_fJsknksxRWZAEg",
-      "hash": "h3rWk_zufnb7fx4Mt78W1R3LzvY2RoHmmPGv5RwSLbI",
+      "salt": "bWiSMsgtN-Mrnd9vtxLruQ",
+      "hash": "bTDcmLUDsKUHkxtFd6nkUYAKFEKzNoipMgHMsELJgKo",
       "iterations": 20000,
       "createdAt": "2026-09-16T09:44:44.901Z",
-      "mustChangePassword": true
+      "mustChangePassword": false
     }
   ]
 }
