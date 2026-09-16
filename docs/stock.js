@@ -525,6 +525,7 @@
     $("sRef").placeholder = cfg.ph;
     $("sTally").textContent = "0";
     $("sReasonWrap").hidden = !cfg.needReason;
+    paintCostField();
     paintOfflineWarn();
     if (cfg.needReason) {
       if (!st.reason && st.reasons.length) st.reason = st.reasons[0].key;
@@ -650,6 +651,12 @@
       device: (navigator.userAgent.indexOf("Mobile") >= 0 ? "มือถือ" : "คอม")
     };
 
+    // ต้นทุนส่งไปเฉพาะตอนรับเข้าและเฉพาะคนที่มีสิทธิ์ เซิร์ฟเวอร์ตรวจซ้ำอีกชั้น
+    var costRaw = (st.mode === "receive" && canManage()) ? $("sCostIn").value.trim() : "";
+    if (costRaw !== "" && isFinite(Number(costRaw)) && Number(costRaw) >= 0) {
+      payload.costPerUnit = Number(costRaw);
+    }
+
     // ขึ้นชื่อสินค้าให้เห็นทันทีจากแผนที่บาร์โค้ดในเครื่อง ไม่ต้องรอเซิร์ฟเวอร์
     var guess = st.byBarcode[code];
     var guessName = guess && st.bySku[guess.sku] ? st.bySku[guess.sku].name : null;
@@ -685,8 +692,15 @@
           low: r.row && r.row.reorderPoint > 0 && r.row.available <= r.row.reorderPoint,
           packQty: r.packQty, units: r.units,
           damaged: r.locationId === "damaged",
-          picked: r.pickedFromReservation || 0
+          picked: r.pickedFromReservation || 0,
+          cost: r.costPerUnit == null ? null : r.costPerUnit,
+          costAvg: r.costAvg == null ? null : r.costAvg
         });
+
+        /* ล้างช่องต้นทุนหลังยิงสำเร็จ — ตั้งใจให้ต้องพิมพ์ใหม่ทุกตัว
+           ถ้าค้างไว้ ของตัวถัดไปจะได้ต้นทุนของตัวก่อนแบบเงียบ ๆ
+           ซึ่งผิดแบบที่ไม่มีใครเห็น เพราะตัวเลขก็ยังดูสมเหตุสมผล */
+        if (payload.costPerUnit != null) $("sCostIn").value = "";
         if (r.pickedFromReservation > 0) loadMine();
         if (r.negative) A.toast("ยอดติดลบแล้ว — ของจริงไม่ตรงตัวเลข ต้องไปนับ");
       }
@@ -705,6 +719,23 @@
       pushRecent({ name: guessName || code, delta: 0, failed: true, msg: err && err.message });
       A.handleErr(err);
     });
+  }
+
+  /**
+     ช่องต้นทุนโชว์เฉพาะโหมดรับเข้า และเฉพาะคนที่มีสิทธิ์เห็นต้นทุน
+     คนคลังไม่เห็นกล่องนี้เลย ไม่ใช่เห็นแล้วกดไม่ได้ — ตัวเลขต้นทุนไม่ควรผ่านตาเขาตั้งแต่ต้น
+   */
+  function paintCostField() {
+    var box = $("sCostWrap");
+    if (!box) return;
+    var show = st.mode === "receive" && canManage();
+    box.hidden = !show;
+    if (!show) { $("sCostIn").value = ""; return; }
+    var note = $("sCostNote");
+    if (note) {
+      note.textContent = "ใส่แล้วระบบคิดต้นทุนถัวเฉลี่ยใหม่ให้ทันที · "
+        + "ช่องนี้จะถูกล้างหลังยิงทุกครั้ง กันเอาต้นทุนของตัวก่อนไปใช้กับตัวถัดไป";
+    }
   }
 
   function pushRecent(item) {
@@ -732,6 +763,8 @@
               : (r.damaged ? "เข้ากองของเสียหาย ไม่นับเป็นพร้อมขาย · " : "")
                 + (r.picked > 0 ? "หักจากการจอง " + n0(r.picked) + " · " : "")
                 + (r.packQty > 1 ? "ยิงลัง × " + r.packQty + " · " : "")
+                + (r.cost == null ? "" : "ต้นทุน " + A.baht(r.cost) + "/หน่วย"
+                    + (r.costAvg == null ? "" : " · ถัวเฉลี่ย " + A.baht(r.costAvg)) + " · ")
                 + (r.left == null ? "" : "เหลือ " + n0(r.left) + (r.low ? " · ใกล้หมด" : ""));
       return '<div class="s-rec" data-tone="' + tone + '">'
         + "<div><b>" + esc(r.name) + "</b><em>" + hhmmss(r.at) + " · " + sub + "</em></div>"
@@ -2042,7 +2075,7 @@
     st.role = (ev.detail.me && ev.detail.me.stockRole) || "readonly";
     // ถ้าเจ้าของเปลี่ยนสิทธิ์ให้ใคร หน้าจอต้องกรองแท็บใหม่ทันที
     // ไม่ใช่ค้างอยู่หน้าที่เขาไม่มีสิทธิ์แล้วจนกว่าจะรีเฟรช
-    if (st.loaded) setPane(st.pane);
+    if (st.loaded) { setPane(st.pane); paintCostField(); }
     // ระบบนี้มีหน้าจอเดียว เข้าระบบได้แล้วก็เริ่มทำงานเลย
     // ไม่มีแท็บอื่นให้รอใครกดเหมือนตอนที่สต็อกยังอยู่ในแอปบัญชี
     load();

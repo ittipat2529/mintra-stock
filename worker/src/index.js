@@ -321,6 +321,21 @@ function requireStockManager(role) {
   }
 }
 
+/**
+ * ต้นทุนใส่มาพร้อมการยิงรับเข้าได้ แต่เฉพาะคนที่มีสิทธิ์เห็นต้นทุน
+ *
+ * คนคลังไม่เห็นช่องนี้บนหน้าจอเลย ถ้ามีต้นทุนส่งมาในนามของคนคลัง
+ * แปลว่ามีคนแต่งคำขอเอง — ต้องปฏิเสธ ไม่ใช่เงียบ ๆ ตัดค่านั้นทิ้ง
+ * เพราะตัดทิ้งเงียบ ๆ คือคนกรอกคิดว่าบันทึกแล้วแต่ไม่ได้บันทึก
+ */
+function requireCostRight(payload, role) {
+  const v = payload && payload.costPerUnit;
+  if (v == null || v === "") return;
+  if (!canManageProducts(role)) {
+    throw new HttpError(403, "เฉพาะหัวหน้าคลังขึ้นไปที่ใส่ต้นทุนได้", "FORBIDDEN");
+  }
+}
+
 function requireReserve(role) {
   if (!canReserve(role)) {
     throw new HttpError(403, "บัญชีนี้เป็นระดับดูอย่างเดียว จองของไม่ได้", "FORBIDDEN");
@@ -538,11 +553,13 @@ async function stock(p, method, body, url, env, me, request) {
   /* --- ยิงสต็อก --- */
   if (p === "/api/stock/scan" && method === "POST") {
     requireScan(role);
+    requireCostRight(body, role);
     return stockCall(env, "/scan", "POST", withMe());
   }
 
   if (p === "/api/stock/scan/batch" && method === "POST") {
     requireScan(role);
+    (Array.isArray(body.scans) ? body.scans : []).forEach(x => requireCostRight(x, role));
     return stockCall(env, "/scan/batch", "POST", withMe());
   }
 

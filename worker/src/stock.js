@@ -517,12 +517,22 @@ export class StockRoom {
 
     const refId = str(p.refId, 60);
 
+    /* ต้นทุนต่อหน่วยใส่มาพร้อมการยิงรับเข้าได้ ไม่ต้องรอไปใส่ทีหลังที่แท็บต้นทุน
+       รับเฉพาะโหมดรับเข้า เพราะแพ็คส่งกับรับคืนไม่ได้กำหนดต้นทุน มันใช้ค่าถัวเฉลี่ยที่มีอยู่
+       ใครมีสิทธิ์ใส่เป็นเรื่องที่ Worker ตัดสินก่อนส่งมาถึงนี่ (คนคลังไม่เห็นช่องนี้เลย) */
+    let costPerUnit = null;
+    if (mode.type === "receive" && p.costPerUnit != null && p.costPerUnit !== "") {
+      const c = Number(p.costPerUnit);
+      if (!isFinite(c) || c < 0 || c > 1e9) return bad("ต้นทุนต่อหน่วยไม่ถูกต้อง");
+      costPerUnit = Math.round(c * 10000) / 10000;
+    }
+
     this.sql.exec(
-      `INSERT INTO movements (id, ts, sku, locationId, qty, type, reason, note, refType, refId, scanId, userId, device)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO movements (id, ts, sku, locationId, qty, type, reason, note, refType, refId, scanId, userId, device, costPerUnit)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       newId("mv"), nowIso(), sku, locationId, qty, mode.type, reasonKey, note,
       str(p.refType, 20) || (mode.type === "receive" ? "bill" : "order"),
-      refId, scanId, str(p.userId, 40), str(p.device, 60));
+      refId, scanId, str(p.userId, 40), str(p.device, 60), costPerUnit);
 
     this.sql.exec(
       `INSERT INTO stock (sku, locationId, onHand, reserved, updatedAt)
@@ -558,6 +568,9 @@ export class StockRoom {
       }
     }
 
+    // คิดต้นทุนถัวเฉลี่ยใหม่ทันทีที่มีต้นทุนเข้ามา — #recomputeCost ไม่มี await จึงเรียกที่นี่ได้
+    const costAvg = costPerUnit == null ? null : this.#recomputeCost(sku);
+
     const version = this.#bump();
     const row = this.#rowsFor([sku])[0];
 
@@ -565,6 +578,8 @@ export class StockRoom {
       ok: true, duplicate: false, sku, name: prod.name, unit: prod.unit,
       delta: qty, packQty, units, row, version, changed: [sku],
       locationId, reason: reasonKey, pickedFromReservation: pickedFrom,
+      // ส่งกลับให้หน้าจอยืนยันว่าต้นทุนเข้าไปแล้วเท่าไร และถัวเฉลี่ยใหม่เป็นเท่าไร
+      costPerUnit, costAvg,
       // ไม่บล็อกตอนติดลบ ของอยู่ในมือคนแพ็คแล้ว ความจริงคือตัวเลขในระบบผิด
       // แต่ต้องดังพอให้รู้ทันที และขึ้นในรายการที่หัวหน้าต้องไปนับ
       negative: row ? row.onHand < 0 : false
