@@ -1,15 +1,30 @@
 {
   "products": [
     {
+      "sku": "MT-0002",
+      "name": "ผ้านาโน",
+      "unit": "ผืน",
+      "category": "ของแถม",
+      "reorderPoint": 10,
+      "costAvg": 2.47,
+      "active": 1,
+      "createdAt": "2026-09-16T02:21:22.120Z",
+      "updatedAt": "2026-09-16T04:10:31.944Z",
+      "uncostedReceives": 0,
+      "costedReceives": 3
+    },
+    {
       "sku": "MT-0001",
       "name": "ฟ็อกกี้",
       "unit": "ชิ้น",
       "category": "ของแถม",
       "reorderPoint": 10,
-      "costAvg": 0,
+      "costAvg": 15,
       "active": 1,
       "createdAt": "2026-09-15T09:36:53.630Z",
-      "updatedAt": ""
+      "updatedAt": "2026-09-16T04:10:51.542Z",
+      "uncostedReceives": 0,
+      "costedReceives": 1
     }
   ],
   "barcodes": [
@@ -18,7 +33,13 @@
       "sku": "MT-0001",
       "packQty": 1,
       "label": ""
+    },
+    {
+      "barcode": "2000000000022",
+      "sku": "MT-0002",
+      "packQty": 1,
+      "label": ""
     }
   ],
-  "updatedAt": "2026-09-15"
+  "updatedAt": "2026-09-16"
 }
