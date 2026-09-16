@@ -9,6 +9,16 @@
       "iterations": 20000,
       "createdAt": "2026-09-15T09:08:41.510Z",
       "mustChangePassword": false
+    },
+    {
+      "username": "phim",
+      "name": "พิมพ์พจี  จันทโรทัย",
+      "role": "sales",
+      "salt": "P1wMGBb222V1Xhn52iliwg",
+      "hash": "pLtz8YeDVHC340sGRcBmIvCTJOxy6VkLrhgTj0vlcyQ",
+      "iterations": 20000,
+      "createdAt": "2026-09-16T02:23:21.187Z",
+      "mustChangePassword": true
     }
   ]
 }
