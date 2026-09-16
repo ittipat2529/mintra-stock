@@ -1,0 +1,19 @@
+{
+  "date": "2026-09-16",
+  "version": 20,
+  "balance": [
+    {
+      "sku": "MT-0001",
+      "locationId": "main",
+      "onHand": -5,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0002",
+      "locationId": "main",
+      "onHand": 26,
+      "reserved": 0
+    }
+  ],
+  "reservations": []
+}
