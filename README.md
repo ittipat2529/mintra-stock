@@ -111,26 +111,54 @@ Durable Object ถูกสร้างให้เองตอน deploy คร
 
 ขั้นตอนถัดไปและวิธีตรวจว่าทำงานถูก อยู่ที่ท้าย [STOCK.md](STOCK.md)
 
-### deploy เองทุกครั้งที่ push
+### วิธี deploy ที่ใช้อยู่ — ด้วยมือ
 
-ต่อรีโปนี้เข้ากับ Worker ใน Cloudflare dashboard ครั้งเดียว แล้วจากนั้นแก้โค้ดแล้ว `git push`
-Cloudflare จะ deploy ให้เอง ไม่ต้องเปิดเทอร์มินัลอีก
+```bash
+git pull
+cd worker
+npx wrangler deploy
+```
+
+**ยังไม่ต่อ Cloudflare Workers Builds กับรีโปนี้** — เคยลองแล้วระบบล่ม อ่านเหตุผลข้างล่างก่อนคิดจะต่อใหม่
+
+### ⚠️ เคยลองต่อ Workers Builds แล้วระบบล่ม
+
+หลังต่อรีโปเข้ากับ build ของ Cloudflare เกิดอาการนี้
+
+```
+GET /              200  ขึ้นหน้าเว็บปกติ
+GET /api/setup     404  ไม่ใช่ JSON ของระบบ — คำขอไม่ได้วิ่งเข้า Worker เลย
+```
+
+**ตัวสคริปต์ Worker ถูกทับหายไป เหลือแต่ไฟล์หน้าเว็บ** และ secret ทั้งสองตัวหายไปด้วย
+อาการหลอกตามาก เพราะ service worker มีแคชเปลือกแอปอยู่ หน้าเว็บจึงยังขึ้นสวยงาม
+เหลือแค่ "ล็อกอินไม่ได้" ซึ่งชี้ไปทางรหัสผ่านมากกว่าจะชี้ไปทาง deploy
+
+กู้ด้วย `npx wrangler deploy` จากเครื่องแล้วใส่ secret ใหม่
+
+ถ้าจะลองต่อ build อีกครั้ง ต้องตั้งให้ครบสี่ช่องนี้ และ**ทดสอบทันทีหลัง build แรกเสร็จ**
 
 | ช่องที่ต้องตั้ง | ค่า |
 |---|---|
 | Repository | `ittipat2529/mintra-stock` |
 | Branch | `main` |
-| **Root directory** | **`worker`** |
+| **Root directory** | **`worker`** ← ถ้าผิดช่องนี้ build จะไม่เห็น `wrangler.jsonc` |
 | Build command | เว้นว่าง — ไม่มีขั้น build |
 | Deploy command | `npx wrangler deploy` |
 
 `worker` เป็น root เพราะ `wrangler.jsonc` อยู่ที่นั่น และมันอ้าง `../docs` ออกมาหาไฟล์หน้าเว็บ
-
 `wrangler` ถูกตรึงเวอร์ชันไว้ใน `worker/package.json` พร้อม `package-lock.json`
-build จึงได้เวอร์ชันเดิมทุกครั้ง ไม่ใช่เวอร์ชันล่าสุดที่อาจเปลี่ยนพฤติกรรม
+build จึงได้เวอร์ชันเดิมทุกครั้ง
 
-**secret ไม่ถูกแตะ** `GITHUB_TOKEN` กับ `SESSION_SECRET` เก็บอยู่ที่ Cloudflare ไม่ได้อยู่ในรีโป
-deploy ใหม่กี่ครั้งก็ยังอยู่ ไม่ต้องใส่ซ้ำ
+**สามอย่างที่ต้องเช็คทันทีหลัง build แรก** อย่าเชื่อว่าสำเร็จเพราะหน้าเว็บยังขึ้น
+
+```bash
+curl -s https://<worker>.workers.dev/api/setup      # ต้องได้ JSON ไม่ใช่ 404
+npx wrangler secret list                            # ต้องมีครบทั้งสองตัว
+npx wrangler deployments list                        # ดูว่า build เป็นคนขึ้นจริง
+```
+
+ถ้า `/api/setup` ได้ 404 ให้ `npx wrangler deploy` กู้ทันที แล้วถอด build ออก
 
 ## อยู่ที่ไฟล์ไหน
 
