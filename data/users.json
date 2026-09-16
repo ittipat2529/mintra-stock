@@ -34,11 +34,11 @@
       "username": "naree",
       "name": "นรีนุช มังกะลู",
       "role": "manager",
-      "salt": "4_WXJlJgEmk_MmdM51uGCA",
-      "hash": "ntxYIN83WejoJbP-yFtJ0E26T0-30_A2botAuHeA-8w",
+      "salt": "uNc5oY99lPeZmc_CMpDQaQ",
+      "hash": "X9nlB8hqQyzxUeuEUFo95yAOF3k6p1rX6M7pvo0x6lA",
       "iterations": 20000,
       "createdAt": "2026-09-16T03:51:47.762Z",
-      "mustChangePassword": true
+      "mustChangePassword": false
     },
     {
       "username": "savarack",
