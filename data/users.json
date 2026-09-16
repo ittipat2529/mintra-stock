@@ -24,11 +24,11 @@
       "username": "waran",
       "name": "วรัญญู ขวดหรีม",
       "role": "manager",
-      "salt": "YA__N5sXfD-7_1QfMg2x-Q",
-      "hash": "L36Ce8866Aqc5REu2r_jdWHnzeOw2sE39vVN7p1xlzE",
+      "salt": "PQiE79ZMZCRWq55K-B33WQ",
+      "hash": "VSXVK71I100hA-vbTSuvCTllx4CdM4slPkF-eUbSxbo",
       "iterations": 20000,
       "createdAt": "2026-09-16T02:25:13.444Z",
-      "mustChangePassword": true
+      "mustChangePassword": false
     }
   ]
 }
