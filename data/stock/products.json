@@ -1,15 +1,106 @@
 {
   "products": [
     {
+      "sku": "MT-0015",
+      "name": "คอลล่าปลอกคอกันเลีย",
+      "unit": "ชิ้น",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 21.8,
+      "active": 1,
+      "createdAt": "2026-09-16T08:50:27.888Z",
+      "updatedAt": "2026-09-16T08:50:40.636Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0005",
+      "name": "ถังพ่น",
+      "unit": "ชิ้น",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 69.56,
+      "active": 1,
+      "createdAt": "2026-09-16T08:32:57.674Z",
+      "updatedAt": "2026-09-16T09:12:32.247Z",
+      "uncostedReceives": 1,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0006",
+      "name": "ถุงถ่าน",
+      "unit": "ชิ้น",
+      "category": "ขอบแถม",
+      "reorderPoint": 20,
+      "costAvg": 5,
+      "active": 1,
+      "createdAt": "2026-09-16T08:33:34.979Z",
+      "updatedAt": "2026-09-16T08:33:44.378Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0004",
+      "name": "ถุงมือ (50 คู่/เเพ็ค)",
+      "unit": "แพ็ค",
+      "category": "ของแถม",
+      "reorderPoint": 50,
+      "costAvg": 4.91,
+      "active": 1,
+      "createdAt": "2026-09-16T08:32:19.995Z",
+      "updatedAt": "2026-09-16T08:40:08.831Z",
+      "uncostedReceives": 2,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0013",
+      "name": "ถุงมือยาง(50คู่/กล่อง)",
+      "unit": "กล่อง",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 53.9,
+      "active": 1,
+      "createdAt": "2026-09-16T08:49:40.080Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0009",
+      "name": "ถุงมือเกษตร",
+      "unit": "คู่",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 17.3,
+      "active": 1,
+      "createdAt": "2026-09-16T08:47:51.701Z",
+      "updatedAt": "2026-09-16T09:13:05.064Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0007",
+      "name": "ถ้วยอาบน้ำ",
+      "unit": "ใบ",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 11.82,
+      "active": 1,
+      "createdAt": "2026-09-16T08:34:05.616Z",
+      "updatedAt": "2026-09-16T09:13:13.853Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
       "sku": "MT-0002",
       "name": "ผ้านาโน",
       "unit": "ผืน",
       "category": "ของแถม",
-      "reorderPoint": 10,
+      "reorderPoint": 100,
       "costAvg": 2.47,
       "active": 1,
       "createdAt": "2026-09-16T02:21:22.120Z",
-      "updatedAt": "2026-09-16T04:10:31.944Z",
+      "updatedAt": "2026-09-16T09:13:51.619Z",
       "uncostedReceives": 0,
       "costedReceives": 3
     },
@@ -22,9 +113,87 @@
       "costAvg": 15,
       "active": 1,
       "createdAt": "2026-09-15T09:36:53.630Z",
-      "updatedAt": "2026-09-16T04:10:51.542Z",
-      "uncostedReceives": 0,
+      "updatedAt": "2026-09-16T09:33:39.312Z",
+      "uncostedReceives": 2,
       "costedReceives": 1
+    },
+    {
+      "sku": "MT-0014",
+      "name": "ฟ้อกกี้1ลิตร (สีเหลือง)",
+      "unit": "ใบ",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 45,
+      "active": 1,
+      "createdAt": "2026-09-16T08:50:04.973Z",
+      "updatedAt": "2026-09-16T08:51:16.386Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0008",
+      "name": "วิตามินนก",
+      "unit": "ขวด",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 19.8,
+      "active": 1,
+      "createdAt": "2026-09-16T08:34:48.277Z",
+      "updatedAt": "2026-09-16T09:14:17.056Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0003",
+      "name": "หัวฉีด",
+      "unit": "ชิ้น",
+      "category": "ของแถม",
+      "reorderPoint": 100,
+      "costAvg": 5.81,
+      "active": 1,
+      "createdAt": "2026-09-16T08:31:35.624Z",
+      "updatedAt": "2026-09-16T09:14:24.219Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0010",
+      "name": "เสื้อเกษตร",
+      "unit": "ตัว",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 51,
+      "active": 1,
+      "createdAt": "2026-09-16T08:48:11.827Z",
+      "updatedAt": "2026-09-16T09:14:34.602Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0012",
+      "name": "แปรงขัด",
+      "unit": "ด้าม",
+      "category": "ของแถม",
+      "reorderPoint": 10,
+      "costAvg": 17.8,
+      "active": 1,
+      "createdAt": "2026-09-16T08:49:16.138Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0011",
+      "name": "แปรงหวี",
+      "unit": "ด้าม",
+      "category": "ของแถม",
+      "reorderPoint": 20,
+      "costAvg": 5,
+      "active": 1,
+      "createdAt": "2026-09-16T08:48:30.090Z",
+      "updatedAt": "2026-09-16T09:14:50.175Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
     }
   ],
   "barcodes": [
@@ -38,6 +207,126 @@
       "barcode": "2000000000022",
       "sku": "MT-0002",
       "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000039",
+      "sku": "MT-0003",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000046",
+      "sku": "MT-0004",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000053",
+      "sku": "MT-0005",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000060",
+      "sku": "MT-0006",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000077",
+      "sku": "MT-0007",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000084",
+      "sku": "MT-0008",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000091",
+      "sku": "MT-0009",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000107",
+      "sku": "MT-0010",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000114",
+      "sku": "MT-0011",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000121",
+      "sku": "MT-0012",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000138",
+      "sku": "MT-0013",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000145",
+      "sku": "MT-0014",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000152",
+      "sku": "MT-0015",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000169",
+      "sku": "MT-0001",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000176",
+      "sku": "MT-0001",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000183",
+      "sku": "MT-0015",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "600000000M(53",
+      "sku": "MT-0005",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "MT-0001",
+      "sku": "MT-0001",
+      "packQty": 282,
+      "label": ""
+    },
+    {
+      "barcode": "MT-0004",
+      "sku": "MT-0004",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "MT-0004.",
+      "sku": "MT-0004",
+      "packQty": 561,
       "label": ""
     }
   ],
