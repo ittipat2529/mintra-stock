@@ -54,11 +54,11 @@
       "username": "fern",
       "name": "อริสรา จันทร์นาม",
       "role": "sales",
-      "salt": "DFjMASc0-g8rhK45EXl6lQ",
-      "hash": "YCrc4LIYMAvZJI0Mesyv4CNW7K1_TpOa5tLpOHb1z-0",
+      "salt": "3DNHlH4ChnuyHzRXDlkqqw",
+      "hash": "Q6bciup0gCnO_JHA1cwub8ZkBp8l4Fn4DJ4Yqhwzuio",
       "iterations": 20000,
       "createdAt": "2026-09-16T09:43:39.828Z",
-      "mustChangePassword": true
+      "mustChangePassword": false
     },
     {
       "username": "saw",
