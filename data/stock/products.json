@@ -23,7 +23,7 @@
       "active": 1,
       "createdAt": "2026-09-16T08:32:57.674Z",
       "updatedAt": "2026-09-16T09:12:32.247Z",
-      "uncostedReceives": 1,
+      "uncostedReceives": 3,
       "costedReceives": 0
     },
     {
@@ -49,7 +49,7 @@
       "active": 1,
       "createdAt": "2026-09-16T08:32:19.995Z",
       "updatedAt": "2026-09-16T08:40:08.831Z",
-      "uncostedReceives": 2,
+      "uncostedReceives": 4,
       "costedReceives": 0
     },
     {
@@ -101,7 +101,7 @@
       "active": 1,
       "createdAt": "2026-09-16T02:21:22.120Z",
       "updatedAt": "2026-09-16T09:13:51.619Z",
-      "uncostedReceives": 0,
+      "uncostedReceives": 3,
       "costedReceives": 3
     },
     {
@@ -114,7 +114,7 @@
       "active": 1,
       "createdAt": "2026-09-15T09:36:53.630Z",
       "updatedAt": "2026-09-16T09:33:39.312Z",
-      "uncostedReceives": 2,
+      "uncostedReceives": 3,
       "costedReceives": 1
     },
     {
@@ -330,5 +330,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-09-16"
+  "updatedAt": "2026-09-17"
 }
