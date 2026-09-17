@@ -62,6 +62,9 @@ export const ADJUST_REASONS = {
 const FALLBACK_RESERVE_LOCATION = "main";
 const DEFAULT_RESERVE_HOURS = 24;
 const AVG_DAYS = 14;
+// ช่วงตั้งต้นของกราฟ "ของไหนออกเยอะ ออกน้อย" — หนึ่งเดือนเห็นรอบการสั่งของพอดี
+// สั้นกว่านี้ของที่ขายสัปดาห์ละครั้งจะดูเหมือนไม่ขยับ
+const MOVER_DAYS = 30;
 
 export const STOCK_ROLES = ["readonly", "sales", "warehouse", "manager"];
 
@@ -795,6 +798,76 @@ export class StockRoom {
       .filter(x => x.level !== "ok" || x.onHand < 0)
       .sort((a, b) => (rank[a.level] - rank[b.level])
         || ((a.daysLeft == null ? 999 : a.daysLeft) - (b.daysLeft == null ? 999 : b.daysLeft)));
+  }
+
+  /* ---------- ของไหนออกเยอะ ออกน้อย ----------
+   * "เหลือเท่าไร" ตอบได้แล้วจาก snapshot แต่คำถามที่ตามมาทุกครั้งคือ
+   * "ตัวไหนขายดี" กับ "ตัวไหนค้างอยู่เฉย ๆ" — สองคำถามนี้คือคำตอบเดียวกัน
+   * เรียงจากมากไปน้อย หัวแถวคือของที่ต้องสั่งเพิ่ม ท้ายแถวคือเงินที่จมอยู่
+   *
+   * นับ "ออก" จากการแพ็คส่งเท่านั้น (type='issue') ไม่รวมการปรับยอดและการย้ายคลัง
+   * เพราะปรับยอดคือการแก้ตัวเลขให้ตรงของจริง ไม่ใช่ของที่ขายออกไป
+   * ถ้าเอามารวมด้วย ของที่นับขาดบ่อยจะกลายเป็น "ขายดี" ทันที
+   *
+   * ส่งทุกตัวในทะเบียนกลับไป รวมตัวที่ออกเป็นศูนย์ด้วย
+   * เพราะ "ไม่มีในผลลัพธ์" กับ "ไม่ขยับเลย" คนละความหมาย และอันหลังคือคำตอบที่ถาม
+   */
+  #movers(q) {
+    const days = clampInt(q && q.get("days"), 1, 365, MOVER_DAYS);
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+
+    /* qty ของการแพ็คส่งเก็บเป็นเลขลบ (ยอดลด) จึงต้องกลับเครื่องหมายก่อนรวม */
+    const agg = {};
+    this.sql.exec(
+      `SELECT sku,
+              SUM(CASE WHEN type='issue'     THEN -qty ELSE 0 END) AS out,
+              SUM(CASE WHEN type='return_in' THEN  qty ELSE 0 END) AS back,
+              SUM(CASE WHEN type='receive'   THEN  qty ELSE 0 END) AS got,
+              SUM(CASE WHEN type='issue'     THEN 1 ELSE 0 END)    AS picks,
+              COUNT(DISTINCT CASE WHEN type='issue' AND refId <> '' THEN refId END) AS orders,
+              MAX(CASE WHEN type='issue' THEN ts ELSE '' END) AS lastOut
+         FROM movements
+        WHERE ts >= ?
+        GROUP BY sku`, since).toArray()
+      .forEach(r => { agg[r.sku] = r; });
+
+    /* ตัวที่ไม่ขยับในช่วงนี้ ต้องบอกได้ว่า "ครั้งสุดท้ายเมื่อไร" ไม่ใช่แค่ว่าไม่มีข้อมูล
+       ของที่ขายเดือนละครั้งกับของที่ไม่เคยขายเลย ต้องสั่งของคนละแบบ */
+    const everOut = {};
+    this.sql.exec(`SELECT sku, MAX(ts) AS t FROM movements WHERE type='issue' GROUP BY sku`)
+      .toArray().forEach(r => { everOut[r.sku] = r.t || ""; });
+
+    const now = Date.now();
+    const rows = this.#rowsFor(null).map(p => {
+      const a = agg[p.sku] || {};
+      const out = Number(a.out) || 0;
+      const last = str(a.lastOut, 40) || everOut[p.sku] || "";
+      const t = last ? Date.parse(last) : NaN;
+      const perDay = out / days;
+      return {
+        sku: p.sku, name: p.name, unit: p.unit, category: p.category,
+        onHand: p.onHand, available: p.available,
+        out,
+        back: Number(a.back) || 0,
+        got: Number(a.got) || 0,
+        picks: Number(a.picks) || 0,
+        orders: Number(a.orders) || 0,
+        lastOut: last,
+        idleDays: isFinite(t) ? Math.floor((now - t) / 86400000) : null,
+        perDay: Math.round(perDay * 100) / 100,
+        daysLeft: perDay > 0 ? Math.round((p.available / perDay) * 10) / 10 : null
+      };
+    }).sort((a, b) => (b.out - a.out) || a.name.localeCompare(b.name, "th"));
+
+    return {
+      days, since, serverTime: nowIso(), version: this.#version(),
+      rows,
+      totalOut: rows.reduce((n, r) => n + r.out, 0),
+      moved: rows.filter(r => r.out > 0).length,
+      idle: rows.filter(r => r.out === 0).length,
+      /* ไม่ขยับแต่ยังมีของค้างคลัง = เงินจมจริง ๆ ต่างจากของที่ไม่ขยับเพราะของหมด */
+      idleWithStock: rows.filter(r => r.out === 0 && r.onHand > 0).length
+    };
   }
 
   /* ---------- จอติดผนังคลัง ----------
@@ -1587,6 +1660,10 @@ export class StockRoom {
     if (path === "/alerts") {
       this.#sweepExpired();
       return this.#json({ alerts: this.#alerts(null), version: this.#version(), avgDays: AVG_DAYS });
+    }
+
+    if (path === "/movers") {
+      return this.#json(this.#movers(url.searchParams));
     }
 
     if (path === "/reservations") {

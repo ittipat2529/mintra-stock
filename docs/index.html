@@ -108,6 +108,26 @@
 
       <section class="due" id="sAlerts" hidden></section>
 
+      <!-- ของไหนออกเยอะ ออกน้อย
+           แกนเดียว หน่วยเดียว (ชิ้น) ทุกแท่งสีเดียวกันเพราะเป็นข้อมูลชุดเดียว
+           ความยาวแท่งบอกปริมาณอยู่แล้ว ไม่ต้องเอาสีมาบอกซ้ำ
+           ทุกแถวมีตัวเลขติดปลายแท่ง อ่านค่าได้ครบโดยไม่ต้องเอาเมาส์ไปชี้ -->
+      <div class="card" id="sMoveCard" hidden style="margin-bottom:18px">
+        <h2>ของไหนออกเยอะ ออกน้อย <span class="note" id="sMvNote"></span></h2>
+        <div class="body">
+          <div class="mv-head">
+            <div class="seg seg3" id="sMvRange" role="group" aria-label="ช่วงเวลาที่นับ">
+              <button type="button" data-days="7" aria-pressed="false">7 วัน</button>
+              <button type="button" data-days="30" aria-pressed="true">30 วัน</button>
+              <button type="button" data-days="90" aria-pressed="false">90 วัน</button>
+            </div>
+            <p class="note" id="sMvSub"></p>
+          </div>
+          <div id="sMvChart" class="mv-chart"></div>
+          <div id="sMvIdle"></div>
+        </div>
+      </div>
+
       <div class="cols">
         <div style="display:grid;gap:20px;min-width:0">
           <div class="card">

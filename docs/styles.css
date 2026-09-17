@@ -1329,3 +1329,85 @@ body.cam-on{overflow:hidden}
 }
 .danger-box .btn-ghost{border-color:var(--opex);color:var(--opex)}
 .danger-box .btn-ghost:hover{background:var(--opex);color:#fff}
+
+/* ============================================================
+   กราฟของไหนออกเยอะ ออกน้อย
+   แท่งนอนเพราะชื่อสินค้าไทยยาว วางแนวตั้งแล้วชื่อเอียงอ่านไม่ออก
+   ============================================================ */
+.mv-head{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  margin:-2px 0 16px;
+}
+.mv-head .seg{flex:none;width:250px}
+.mv-head .note{margin:0;flex:1;min-width:180px}
+
+.mv-chart{display:grid;gap:9px}
+.mv-r{
+  display:grid;grid-template-columns:minmax(112px,30%) 1fr auto;
+  align-items:center;gap:12px;
+  border-radius:9px;padding:3px 5px;margin:0 -5px;
+  outline:0;transition:background .12s;
+}
+.mv-r:hover,.mv-r:focus-visible{background:var(--surface-2)}
+.mv-r:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+
+.mv-n{
+  font-size:13.5px;line-height:1.35;color:var(--ink);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.mv-n i{
+  display:block;font-style:normal;font-size:10.5px;color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;
+}
+
+/* รางบาง ๆ บอกความยาวเต็มสเกล ให้เทียบสัดส่วนได้ว่าแท่งนี้กินไปเท่าไรของตัวที่มากสุด
+   เส้นเดียว สีถอยจากพื้นหนึ่งขั้น ไม่ใช่เส้นประ */
+.mv-t{
+  position:relative;height:14px;border-radius:7px;background:var(--surface-2);
+  min-width:40px;overflow:visible;
+}
+.mv-t i{
+  position:absolute;left:0;top:0;height:100%;
+  /* ปลายแท่งมนตามค่า ฝั่งที่ติดเส้นศูนย์เป็นมุมฉาก */
+  border-radius:0 5px 5px 0;background:var(--accent);
+  min-width:3px;transition:width .2s ease;
+}
+/* ตัวเลขชิดขวา หน่วยชิดซ้าย คนละช่อง เลขจะได้เรียงตรงกันทุกแถว
+   ถ้าจัดชิดขวาทั้งก้อน หน่วยที่ยาวไม่เท่ากันจะดันเลขเยื้องกันไปหมด */
+.mv-v{
+  display:grid;grid-template-columns:1fr 44px;gap:6px;align-items:baseline;
+  font-size:14.5px;font-weight:700;color:var(--ink);white-space:nowrap;min-width:92px;
+}
+.mv-v>span{
+  text-align:right;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+}
+.mv-v em{
+  font-style:normal;font-weight:500;font-size:11.5px;color:var(--muted);
+  text-align:left;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* คั่นหัวแถวกับท้ายแถวตอนของเยอะเกินกว่าจะวาดหมด */
+.mv-skip{
+  margin:4px 0;padding:7px 0;font-size:11.5px;color:var(--muted);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+
+.mv-idle{
+  margin-top:16px;padding-top:15px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--ink-2);line-height:1.65;
+}
+.mv-idle b{color:var(--ink)}
+.mv-more{
+  margin-top:13px;font-size:12.5px;color:var(--muted);
+}
+.mv-empty{font-size:13.5px;color:var(--ink-2);line-height:1.7}
+
+@media (max-width:640px){
+  .mv-head .seg{width:100%}
+  /* จอแคบวางชื่อไว้บรรทัดบน แล้วแท่งกับตัวเลขอยู่บรรทัดล่าง
+     บีบสามคอลัมน์ลงจอมือถือแล้วชื่อเหลือที่ไม่ถึงสิบตัวอักษร */
+  .mv-r{grid-template-columns:1fr auto;gap:4px 10px}
+  .mv-n{grid-column:1/-1;white-space:normal}
+  .mv-v{min-width:0}
+}

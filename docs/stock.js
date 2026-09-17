@@ -65,6 +65,7 @@
     reasons: [], reason: "", reserveHours: 24,
     nextSku: "", nextBarcode: "", skuPrefix: "",
     mine: [], board: null, alerts: [], boardTimer: null, alertAt: 0,
+    movers: null, moverDays: 30, moverAt: 0,
     counts: [], count: null, countFilter: "all", adjReasons: {},
     value: null, receipts: [], adjustments: [], rc: null,
     queued: 0, flushing: false,
@@ -275,6 +276,7 @@
     resync();
     loadAlerts(true);
     loadMine();
+    loadMovers(true);
     if (st.pane === "wall") loadBoard();
     if (st.pane === "products") loadMaster();
     if (st.pane === "cost") loadCost();
@@ -412,6 +414,7 @@
     }
     renderDetail();
     loadAlerts(false);
+    loadMovers(false);
   }
 
   function cssEsc(s) { return String(s).replace(/["\\]/g, "\\$&"); }
@@ -1430,6 +1433,211 @@
     box.hidden = false;
   }
 
+  /* ================= ของไหนออกเยอะ ออกน้อย =================
+     คำถามที่ตามมาหลัง "เหลือเท่าไร" เสมอคือ "ตัวไหนขายดี" กับ "ตัวไหนค้าง"
+     ซึ่งเป็นคำตอบเดียวกัน เรียงจากมากไปน้อยแล้วอ่านหัวแถวกับท้ายแถว
+
+     ที่เลือกเป็นแท่งนอน ไม่ใช่แท่งตั้งหรือวงกลม
+     - ชื่อสินค้าไทยยาว วางแนวตั้งแล้วต้องเอียงชื่อจนอ่านไม่ออก
+     - วงกลมเทียบค่าที่ใกล้กันไม่ได้ ซึ่งคือสิ่งที่ต้องทำที่นี่
+     - ทุกแท่งสีเดียวกัน เพราะเป็นข้อมูลชุดเดียว (จำนวนชิ้นที่ออก)
+       ความยาวบอกปริมาณอยู่แล้ว เอาสีมาไล่เข้ม-อ่อนตามค่าคือบอกซ้ำของเดิม
+       แล้วเปลืองช่องทางสีที่ควรเก็บไว้บอก "อะไรเป็นอะไร" ไปฟรี ๆ
+   */
+
+  var MOVER_KEY = "mintra-stock:moverDays";
+  var MOVER_ROWS = 12;
+
+  function moverDays() {
+    try {
+      var v = Number(localStorage.getItem(MOVER_KEY));
+      if (v === 7 || v === 30 || v === 90) return v;
+    } catch (e) { /* โหมดส่วนตัวอ่านไม่ได้ ใช้ค่าตั้งต้น */ }
+    return 30;
+  }
+
+  function loadMovers(force) {
+    if (!$("sMoveCard")) return Promise.resolve();
+    // ยอดขายเฉลี่ยไม่เปลี่ยนทุกวินาที ดึงถี่กว่านาทีละครั้งไม่ได้อะไรเพิ่ม
+    if (!force && Date.now() - st.moverAt < 60000) return Promise.resolve();
+    st.moverAt = Date.now();
+    // โหลดใหม่แล้วต้องไม่กระพริบเป็นโครงเปล่า ค้างภาพเดิมไว้จาง ๆ แทน
+    if (st.movers) $("sMvChart").style.opacity = ".55";
+    return A.api("/stock/movers?days=" + st.moverDays).then(function (d) {
+      st.movers = d;
+      renderMovers();
+    }).catch(function () {
+      // กราฟโหลดไม่ได้ไม่ควรทำให้ยอดคงเหลือหายไปจากจอ
+      $("sMvChart").style.opacity = "";
+    });
+  }
+
+  function setMoverDays(days) {
+    if (st.moverDays === days) return;
+    st.moverDays = days;
+    try { localStorage.setItem(MOVER_KEY, String(days)); } catch (e) { /* ไม่ซีเรียส */ }
+    paintMoverRange();
+    loadMovers(true);
+  }
+
+  function paintMoverRange() {
+    var box = $("sMvRange");
+    if (!box) return;
+    [].forEach.call(box.querySelectorAll("button"), function (b) {
+      b.setAttribute("aria-pressed", Number(b.getAttribute("data-days")) === st.moverDays ? "true" : "false");
+    });
+  }
+
+  function renderMovers() {
+    var card = $("sMoveCard"), chart = $("sMvChart");
+    if (!card || !chart) return;
+    chart.style.opacity = "";
+
+    var d = st.movers;
+    if (!d) { card.hidden = true; return; }
+    card.hidden = false;
+
+    var rows = d.rows || [];
+    var days = d.days || st.moverDays;
+    $("sMvNote").textContent = "นับจากการแพ็คส่งใน " + days + " วันที่ผ่านมา";
+
+    if (!rows.length) {
+      $("sMvSub").textContent = "";
+      chart.innerHTML = '<p class="mv-empty">ยังไม่มีสินค้าในทะเบียน — เพิ่มสินค้าก่อนแล้วกราฟนี้จะขึ้นเอง</p>';
+      $("sMvIdle").innerHTML = "";
+      return;
+    }
+
+    /* ยังไม่มีการแพ็คส่งเลยในช่วงนี้ = แท่งทุกแท่งยาวศูนย์
+       วาดออกมาก็เป็นรางเปล่าสิบกว่าแถวที่ดูเหมือนกราฟเสีย บอกเป็นคำตรง ๆ ดีกว่า */
+    if (!d.totalOut) {
+      $("sMvSub").textContent = "";
+      chart.innerHTML = '<p class="mv-empty">ยังไม่มีการแพ็คส่งใน ' + days + " วันที่ผ่านมา"
+        + " — มีสินค้าในทะเบียน " + n0(rows.length) + " รายการรออยู่"
+        // ฝ่ายขายยิงไม่ได้ จะบอกให้ไปยิงก็เป็นคำแนะนำที่ทำตามไม่ได้
+        + (canScan()
+            ? "<br>ยิงโหมด <b>แพ็คส่ง</b> ไปสองสามครั้ง แล้วกลับมาดูว่าตัวไหนออกเยอะที่สุด"
+            : "<br>กราฟจะขึ้นเองเมื่อคลังเริ่มยิงแพ็คส่ง")
+        + "</p>";
+      $("sMvIdle").innerHTML = "";
+      return;
+    }
+
+    /* ในกราฟมีแต่ตัวที่ขยับจริง ตัวที่ออกศูนย์ไปอยู่ในบล็อกล่างซึ่งบอกได้มากกว่า
+       (เหลือเท่าไร ครั้งสุดท้ายเมื่อไร) แท่งยาวศูนย์พิกเซลบอกได้แค่ว่าศูนย์ */
+    var moved = rows.filter(function (r) { return r.out > 0; });
+    var max = moved[0].out || 1;
+
+    /* ของเยอะเกินกว่าจะวาดหมด ตัดหัวกับท้ายมาให้ครบทั้งสองคำถาม
+       ถ้าเอาแต่หัวแถว คำว่า "ออกน้อย" ในชื่อการ์ดก็โกหก */
+    var head = moved, tail = [], skipped = 0;
+    if (moved.length > MOVER_ROWS) {
+      head = moved.slice(0, MOVER_ROWS - 4);
+      tail = moved.slice(-4);
+      skipped = moved.length - head.length - tail.length;
+    }
+
+    $("sMvSub").textContent = "แพ็คส่งออกไปรวม " + n0(d.totalOut) + " ชิ้น จาก "
+      + n0(d.moved) + " รายการ" + (d.idle ? " · อีก " + n0(d.idle) + " รายการไม่ขยับเลย" : "");
+
+    function bar(r) {
+      var pct = Math.max(1.5, (r.out / max) * 100);
+      return '<div class="mv-r" tabindex="0" data-sku="' + esc(r.sku) + '"'
+        + ' aria-label="' + esc(r.name) + " แพ็คส่งออก " + n0(r.out) + " " + esc(r.unit || "ชิ้น")
+        + " ใน " + days + ' วัน">'
+        + '<span class="mv-n">' + esc(r.name) + "<i>" + esc(r.sku) + "</i></span>"
+        + '<span class="mv-t"><i style="width:' + pct.toFixed(1) + '%"></i></span>'
+        + '<b class="mv-v"><span>' + n0(r.out) + '</span><em>' + esc(r.unit || "ชิ้น") + "</em></b>"
+        + "</div>";
+    }
+
+    chart.innerHTML = head.map(bar).join("")
+      + (skipped > 0 ? '<p class="mv-skip">ข้ามไป ' + n0(skipped)
+          + " รายการที่อยู่กลางตาราง · ท้ายแถวคือตัวที่ออกน้อยที่สุด</p>" : "")
+      + tail.map(bar).join("");
+
+    var stuck = rows.filter(function (r) { return r.out <= 0 && r.onHand > 0; })
+      .sort(function (a, b) { return b.onHand - a.onHand; });
+    var empty = d.idle - stuck.length;
+
+    var html = "";
+    if (stuck.length) {
+      html += '<div class="mv-idle"><b>ยังมีของในคลังแต่ไม่ออกเลยใน ' + days + " วันนี้ — "
+        + n0(stuck.length) + " รายการ</b><br>"
+        + stuck.slice(0, 6).map(function (r) {
+            return esc(r.name) + " เหลือ " + n0(r.onHand) + " " + esc(r.unit || "ชิ้น")
+              + (r.idleDays != null ? " (ครั้งสุดท้าย " + n0(r.idleDays) + " วันก่อน)" : " (ไม่เคยแพ็คส่งเลย)");
+          }).join(" · ")
+        + (stuck.length > 6 ? " · และอีก " + n0(stuck.length - 6) + " รายการ" : "")
+        + "</div>";
+    }
+    if (empty > 0) {
+      html += '<p class="mv-more">อีก ' + n0(empty)
+        + " รายการไม่ออกและไม่มีของค้างคลัง — ของหมดหรือยังไม่เคยรับเข้า</p>";
+    }
+    $("sMvIdle").innerHTML = html;
+  }
+
+  /* ---------- ป้ายบอกค่า ----------
+     ตัวเลขติดปลายแท่งอ่านได้ครบอยู่แล้ว ป้ายนี้เป็นของแถม ไม่ใช่ทางเดียวที่จะรู้ค่า
+     และต้องขึ้นตอนกด Tab ไปโฟกัสด้วย ไม่ใช่เฉพาะตอนเอาเมาส์ไปชี้
+     ชื่อสินค้าใส่ด้วย textContent ไม่ใช่ innerHTML เพราะเป็นข้อความที่คนพิมพ์เข้ามา */
+  function moverTip(row) {
+    var tip = $("mvTip");
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.className = "tip";
+      tip.id = "mvTip";
+      tip.setAttribute("role", "tooltip");
+      document.body.appendChild(tip);
+    }
+    var sku = row.getAttribute("data-sku");
+    var r = (st.movers && st.movers.rows || []).filter(function (x) { return x.sku === sku; })[0];
+    if (!r) return;
+
+    var days = st.movers.days;
+    var lines = [];
+    lines.push(r.out > 0
+      ? n0(r.out) + " " + (r.unit || "ชิ้น") + " ใน " + days + " วัน"
+      : "ไม่ได้แพ็คส่งเลยใน " + days + " วัน");
+    lines.push(r.name);
+    if (r.orders > 0) lines.push("จาก " + n0(r.orders) + " ออเดอร์ · เฉลี่ย " + r.perDay + "/วัน");
+    else if (r.out > 0) lines.push("เฉลี่ย " + r.perDay + "/วัน");
+    if (r.got > 0) lines.push("รับเข้าช่วงนี้ " + n0(r.got));
+    if (r.back > 0) lines.push("รับคืน " + n0(r.back));
+    if (r.out <= 0) {
+      lines.push(r.idleDays != null
+        ? "แพ็คส่งครั้งสุดท้าย " + n0(r.idleDays) + " วันก่อน"
+        : "ไม่เคยแพ็คส่งเลยตั้งแต่เพิ่มเข้าระบบ");
+    }
+    lines.push("เหลือ " + n0(r.available) + (r.daysLeft != null ? " · พอขายอีกประมาณ " + r.daysLeft + " วัน" : ""));
+
+    tip.textContent = "";
+    lines.forEach(function (t, i) {
+      var el = document.createElement(i === 0 ? "b" : "span");
+      el.textContent = t;
+      el.style.display = "block";
+      if (i === 0) el.style.fontSize = "14px";
+      if (i === 1) el.style.opacity = ".82";
+      tip.appendChild(el);
+    });
+
+    var b = row.getBoundingClientRect();
+    tip.style.visibility = "hidden";
+    tip.hidden = false;
+    var h = tip.offsetHeight, w = tip.offsetWidth;
+    var top = b.top - h - 8;
+    if (top < 8) top = b.bottom + 8;
+    tip.style.top = top + "px";
+    tip.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, b.left + 4)) + "px";
+    tip.style.visibility = "";
+  }
+
+  function hideMoverTip() {
+    var tip = $("mvTip");
+    if (tip) tip.hidden = true;
+  }
+
   /* ================= การจอง ================= */
 
   function leftLabel(iso) {
@@ -2198,7 +2406,7 @@
     st.boardTimer = null;
 
     paintCam();
-    if (id === "browse") { renderBrowse(); loadAlerts(true); loadMine(); }
+    if (id === "browse") { renderBrowse(); loadAlerts(true); loadMine(); loadMovers(true); }
     if (id === "scan") { setMode(st.mode || lastMode()); loadPending(); paintTransfer(); }
     if (id === "wall") {
       loadBoard();
@@ -2223,11 +2431,13 @@
       renderPaneSel();
       setPane(canScan() && !canManage() ? "scan" : "browse");
     }
+    st.moverDays = moverDays();
+    paintMoverRange();
     connect();
     refreshQueue();
     if (!st.tickTimer) st.tickTimer = setInterval(paintConn, 1000);
     return fetchSnapshot().then(function () {
-      if (st.pane === "browse") { loadAlerts(true); loadMine(); }
+      if (st.pane === "browse") { loadAlerts(true); loadMine(); loadMovers(true); }
       if (st.pane === "wall") loadBoard();
     });
   }
@@ -2349,11 +2559,35 @@
       st.tally = 0;
       $("sTally").textContent = "0";
       renderRecent();
-      return Promise.all([fetchSnapshot(), loadMaster(), loadMine(), loadAlerts(true)]);
+      return Promise.all([fetchSnapshot(), loadMaster(), loadMine(), loadAlerts(true), loadMovers(true)]);
     }).catch(A.handleErr).then(function () {
       A.setBusy(false, $("sRsGo"), "ล้างข้อมูล");
     });
   }
+
+  /* ---------- กราฟของไหนออกเยอะ ออกน้อย ---------- */
+  $("sMvRange").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button[data-days]");
+    if (b) setMoverDays(Number(b.getAttribute("data-days")));
+  });
+
+  /* ป้ายบอกค่าขึ้นทั้งตอนชี้และตอนกด Tab มาโฟกัส คีย์บอร์ดต้องได้ข้อมูลเท่ากับเมาส์
+     ดักที่กล่องแม่ตัวเดียว ไม่ต้องผูกฟังทุกแถวใหม่ทุกครั้งที่กราฟวาดใหม่ */
+  var mvBox = $("sMvChart");
+  mvBox.addEventListener("pointerover", function (ev) {
+    var r = ev.target.closest(".mv-r");
+    if (r) moverTip(r);
+  });
+  mvBox.addEventListener("pointerout", function (ev) {
+    var r = ev.target.closest(".mv-r");
+    if (r && !r.contains(ev.relatedTarget)) hideMoverTip();
+  });
+  mvBox.addEventListener("focusin", function (ev) {
+    var r = ev.target.closest(".mv-r");
+    if (r) moverTip(r);
+  });
+  mvBox.addEventListener("focusout", hideMoverTip);
+  window.addEventListener("scroll", hideMoverTip, { passive: true });
 
   $("sResetBtn").addEventListener("click", openReset);
   $("sRsCancel").addEventListener("click", function () { $("sRsDlg").close(); });

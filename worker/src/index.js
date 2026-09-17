@@ -421,6 +421,13 @@ async function stock(p, method, body, url, env, me, request) {
     return stockCall(env, "/alerts");
   }
 
+  /* --- ของไหนออกเยอะ ออกน้อย เป็นจำนวนชิ้น ไม่ใช่เงิน ทุกฝ่ายจึงดูได้ --- */
+  if (p === "/api/stock/movers" && method === "GET") {
+    const q = new URLSearchParams();
+    if (url.searchParams.get("days")) q.set("days", url.searchParams.get("days"));
+    return stockCall(env, "/movers?" + q.toString());
+  }
+
   /* --- การจอง กุญแจกันฝ่ายขายขายชนกัน --- */
   if (p === "/api/stock/reservations" && method === "GET") {
     const q = new URLSearchParams();
