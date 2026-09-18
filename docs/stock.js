@@ -66,6 +66,7 @@
     nextSku: "", nextBarcode: "", skuPrefix: "",
     mine: [], board: null, alerts: [], boardTimer: null, alertAt: 0,
     movers: null, moverDays: 30, moverAt: 0,
+    day: null, dayDate: "", dayAt: 0, dayTrail: null, stockSort: "name",
     counts: [], count: null, countFilter: "all", adjReasons: {},
     value: null, receipts: [], adjustments: [], rc: null,
     queued: 0, flushing: false,
@@ -223,7 +224,13 @@
         mergeRows(m.rows || []);
         paintConn();
         renderBrowse();
-        if (st.pane === "wall") renderWall();
+        if (st.pane === "wall") {
+          renderWall();
+          renderWallStock();
+          // รายการเข้า-ออกของวันนี้เป็นคำขอแยก ต้องดึงใหม่เอง แต่คนคลังยิงรัว
+          // จึงหน่วงไว้ ไม่ใช่ยิงคำขอทุกครั้งที่บาร์โค้ดผ่านหัวอ่าน
+          if (st.day && st.day.isToday) loadDay(false);
+        }
         return;
       }
 
@@ -277,7 +284,7 @@
     loadAlerts(true);
     loadMine();
     loadMovers(true);
-    if (st.pane === "wall") loadBoard();
+    if (st.pane === "wall") { loadBoard(); loadDay(true); renderWallStock(); }
     if (st.pane === "products") loadMaster();
     if (st.pane === "cost") loadCost();
     if (st.pane === "count") loadCounts();
@@ -327,6 +334,7 @@
     paintTransfer();
     paintConn();
     renderBrowse();
+    if (st.pane === "wall") renderWallStock();
     if (st.pane === "products") renderMaster();
   }
 
@@ -1782,6 +1790,169 @@
       + "</div>";
   }
 
+  /* ================= เข้า-ออกของวัน =================
+     ยอดรวมบนจอผนัง ("รับเข้า 120 · แพ็คส่ง 88") ตอบไม่ได้ว่า "ของอะไร"
+     ซึ่งเป็นสิ่งเดียวที่คนคลังต้องรู้ตอนเช็คของท้ายวัน
+
+     จัดกลุ่มตามสินค้า ไม่ใช่ไล่เป็นรายการยิงทีละใบ ของตัวเดียวที่ยิงสิบครั้ง
+     ในออเดอร์เดียว คนอ่านอยากรู้ว่า "ตัวนี้ออกไป 30 ชิ้น" ไม่ใช่สิบบรรทัดละ 3
+   */
+
+  function loadDay(force) {
+    if (!$("sDayIn")) return Promise.resolve();
+    /* คนคลังยิงรัว จะยิงคำขอทุกครั้งที่บาร์โค้ดผ่านหัวอ่านไม่ไหว จึงหน่วงไว้
+       แต่ต้องตั้งเวลาดึงตามท้ายด้วย ไม่ใช่ทิ้งคำขอที่ถูกหน่วงไปเฉย ๆ
+       ไม่งั้นการยิงครั้งสุดท้ายของชุดจะไม่ขึ้นจนกว่าจะถึงรอบรีเฟรชนาทีถัดไป */
+    if (!force && st.day && st.day.isToday && Date.now() - st.dayAt < 15000) {
+      if (!st.dayTrail) {
+        st.dayTrail = setTimeout(function () {
+          st.dayTrail = null;
+          if (isActive() && st.pane === "wall" && st.day && st.day.isToday) loadDay(true);
+        }, 15000 - (Date.now() - st.dayAt));
+      }
+      return Promise.resolve();
+    }
+    clearTimeout(st.dayTrail);
+    st.dayTrail = null;
+    st.dayAt = Date.now();
+    var q = st.dayDate ? "?date=" + encodeURIComponent(st.dayDate) : "";
+    return A.api("/stock/day" + q).then(function (d) {
+      st.day = d;
+      st.dayDate = d.date;
+      renderDay();
+    }).catch(function () {
+      // จอผนังไม่มีใครเฝ้า ดึงพลาดครั้งเดียวไม่ควรล้างของเดิมทิ้ง
+      if (!st.day) $("sDayIn").innerHTML = '<p class="wl-empty">ดึงรายการของวันนี้ไม่สำเร็จ กำลังลองใหม่</p>';
+    });
+  }
+
+  function goDay(date) {
+    if (!date) return;
+    st.dayDate = date;
+    loadDay(true);
+  }
+
+  function renderDay() {
+    var box = $("sDayIn");
+    if (!box) return;
+    var d = st.day;
+    if (!d) { box.innerHTML = '<p class="wl-empty">กำลังโหลด…</p>'; return; }
+
+    var t = d.totals || {};
+    $("sDayDate").value = d.date;
+    $("sDayDate").max = d.today;
+    $("sDayPrev").disabled = !d.prevDate;
+    $("sDayNext").disabled = !d.nextDate;
+    $("sDayToday").setAttribute("data-on", d.isToday ? "true" : "false");
+    $("sDayToday").disabled = d.isToday;
+    $("sDayNote").textContent = (d.isToday ? "วันนี้ " : "") + thaiDay(d.date)
+      + (t.scans ? " · ยิงไปแล้ว " + n0(t.scans) + " ครั้ง" : "");
+
+    var nothing = !(d.received || []).length && !(d.issued || []).length
+      && !(d.returned || []).length && !(d.adjusted || []).length;
+    if (nothing) {
+      box.innerHTML = '<p class="wl-empty">' + (d.isToday
+          ? "วันนี้ยังไม่มีการรับเข้าและยังไม่มีการตัดออก"
+          : esc(thaiDay(d.date)) + " ไม่มีการเคลื่อนไหวเลย")
+        + (d.prevDate ? "<br>กด ◀ เพื่อไปวันที่มีรายการล่าสุด (" + esc(thaiDay(d.prevDate)) + ")" : "")
+        + "</p>";
+      return;
+    }
+
+    box.innerHTML =
+        '<div class="wl-io">'
+      +   col("in", "รับเข้า", d.received, t.received, "ยังไม่มีของเข้าวันนี้")
+      +   col("out", "ตัดออก (แพ็คส่ง)", d.issued, t.issued, "ยังไม่มีของออกวันนี้")
+      + "</div>"
+      + ((d.returned || []).length || (d.adjusted || []).length
+          ? '<div class="wl-extra">'
+            + ((d.returned || []).length ? col("ret", "ของตีกลับ", d.returned, t.returned, "") : "")
+            + ((d.adjusted || []).length ? col("adj", "ปรับยอด", d.adjusted, null, "") : "")
+            + "</div>"
+          : "");
+  }
+
+  /* หนึ่งฝั่งของตาราง รายการเรียงจากมากไปน้อย ของชิ้นเยอะที่สุดอยู่บนสุด */
+  function col(io, head, list, total, none) {
+    list = list || [];
+    return '<div class="wl-col" data-io="' + io + '">'
+      + "<h4><i></i>" + esc(head)
+      + (total != null ? "<em>" + (io === "out" ? "−" : "+") + n0(total) + "</em>" : "")
+      + "</h4>"
+      + (list.length
+          ? list.map(function (r) {
+              return '<div class="wl-line">'
+                + "<div><b>" + esc(r.name) + "</b><em>" + esc(r.sku) + dayMeta(io, r) + "</em></div>"
+                + '<div class="wl-q"><b>' + (io === "adj" && r.qty > 0 ? "+" : "") + n0(r.qty)
+                +   "</b><span>" + esc(r.unit || "ชิ้น") + "</span></div>"
+                + "</div>";
+            }).join("")
+          : '<p class="wl-empty" style="margin-top:0;padding:18px">' + esc(none) + "</p>")
+      + "</div>";
+  }
+
+  /* บรรทัดเล็กใต้ชื่อ — บอกว่ามาจากบิลไหน/ออเดอร์ไหน และใครเป็นคนยิง
+     คนเช็คของท้ายวันต้องตามกลับไปหาใบจริงได้ ไม่ใช่เห็นแค่ตัวเลขลอย ๆ */
+  function dayMeta(io, r) {
+    var bits = [];
+    if (r.refCount > 0) {
+      var word = io === "in" ? "บิล" : io === "out" ? "ออเดอร์" : "ใบ";
+      // ใบเดียวโชว์เลขจริงไปเลย คนตามของกลับได้ทันที
+      // สองใบขึ้นไปโชว์แค่จำนวน เพราะเลขสองใบต่อกันยาวจนโดนตัดกลางเลข
+      // ซึ่งแย่กว่าไม่โชว์ — เลขที่อ่านได้ครึ่งเดียวตามกลับไม่ได้แต่ดูเหมือนตามได้
+      bits.push(r.refCount === 1 ? word + " " + r.refs[0] : r.refCount + " " + word);
+    }
+    if ((r.people || []).length) bits.push(r.people.slice(0, 2).join(", "));
+    return bits.length ? " · " + esc(bits.join(" · ")) : "";
+  }
+
+  function thaiDay(date) {
+    var p = String(date || "").split("-");
+    if (p.length !== 3) return date || "";
+    var mon = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+               "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    return Number(p[2]) + " " + (mon[Number(p[1]) - 1] || p[1]) + " " + (Number(p[0]) + 543);
+  }
+
+  /* ================= ของในคลังตอนนี้ =================
+     จำนวนชิ้นล้วน ไม่มีต้นทุนและไม่มีมูลค่าเลย จอนี้แขวนอยู่ในคลังที่ใครก็เดินผ่าน
+     ตัวเลขมาจาก snapshot ที่มีอยู่แล้ว ไม่ต้องยิงคำขอเพิ่ม จึงขยับสดทุกครั้งที่มีคนยิง
+   */
+  function renderWallStock() {
+    var box = $("sStockIn");
+    if (!box) return;
+    var list = (st.products || []).slice();
+
+    if (st.stockSort === "qty") {
+      list.sort(function (a, b) { return (b.onHand - a.onHand) || a.name.localeCompare(b.name, "th"); });
+    } else {
+      list.sort(function (a, b) { return a.name.localeCompare(b.name, "th"); });
+    }
+
+    var pieces = list.reduce(function (n, p) { return n + (Number(p.onHand) || 0); }, 0);
+    var outCount = list.filter(function (p) { return p.onHand <= 0; }).length;
+    $("sStockNote").textContent = n0(list.length) + " รายการ · รวม " + n0(pieces) + " ชิ้น"
+      + (outCount ? " · หมดแล้ว " + n0(outCount) + " รายการ" : "");
+
+    if (!list.length) {
+      box.innerHTML = '<p class="wl-empty">ยังไม่มีสินค้าในทะเบียน</p>';
+      return;
+    }
+
+    box.innerHTML = '<div class="wl-stock">' + list.map(function (p) {
+      var on = Number(p.onHand) || 0;
+      var tags = [];
+      if (Number(p.reserved) > 0) tags.push("จองไว้ " + n0(p.reserved));
+      if (Number(p.blocked) > 0) tags.push("ของเสีย " + n0(p.blocked));
+      return '<div class="wl-item"' + (on === 0 ? ' data-out="true"' : "")
+        + (on < 0 ? ' data-neg="true"' : "") + ">"
+        + "<div><b>" + esc(p.name) + "</b><em>" + esc(p.sku)
+        +   (tags.length ? " · " + esc(tags.join(" · ")) : "") + "</em></div>"
+        + '<div class="wl-q"><b>' + n0(on) + "</b><span>" + esc(p.unit || "ชิ้น") + "</span></div>"
+        + "</div>";
+    }).join("") + "</div>";
+  }
+
   function hhmm() {
     var d = new Date(), p = function (x) { return (x < 10 ? "0" : "") + x; };
     return p(d.getHours()) + ":" + p(d.getMinutes());
@@ -2410,9 +2581,16 @@
     if (id === "scan") { setMode(st.mode || lastMode()); loadPending(); paintTransfer(); }
     if (id === "wall") {
       loadBoard();
+      loadDay(true);
+      renderWallStock();
       // จอผนังไม่มีใครกด ตัวเลขยอดรวมของวันจึงต้องดึงเองเป็นระยะ
       // (ยอดคงเหลือมาทาง WebSocket อยู่แล้ว ที่ดึงคือยอดรวมของวันกับค่าเฉลี่ย)
-      st.boardTimer = setInterval(function () { if (isActive() && st.pane === "wall") loadBoard(); }, 60000);
+      st.boardTimer = setInterval(function () {
+        if (!isActive() || st.pane !== "wall") return;
+        loadBoard();
+        // วันที่ผ่านไปแล้วเปลี่ยนไม่ได้ ดึงซ้ำเฉพาะตอนดูวันนี้
+        if (st.day && st.day.isToday) loadDay(true);
+      }, 60000);
     }
     if (id === "count") loadCounts();
     if (id === "cost") loadCost();
@@ -2438,7 +2616,7 @@
     if (!st.tickTimer) st.tickTimer = setInterval(paintConn, 1000);
     return fetchSnapshot().then(function () {
       if (st.pane === "browse") { loadAlerts(true); loadMine(); loadMovers(true); }
-      if (st.pane === "wall") loadBoard();
+      if (st.pane === "wall") { loadBoard(); loadDay(true); renderWallStock(); }
     });
   }
 
@@ -2564,6 +2742,25 @@
       A.setBusy(false, $("sRsGo"), "ล้างข้อมูล");
     });
   }
+
+  /* ---------- จอผนังคลัง: เลือกวัน และเรียงรายการของ ---------- */
+  $("sDayPrev").addEventListener("click", function () { goDay(st.day && st.day.prevDate); });
+  $("sDayNext").addEventListener("click", function () { goDay(st.day && st.day.nextDate); });
+  $("sDayToday").addEventListener("click", function () { goDay(st.day && st.day.today); });
+  $("sDayDate").addEventListener("change", function () {
+    // ช่องวันที่ว่างได้ตอนคนกดล้าง ปล่อยให้เด้งกลับไปวันนี้ ไม่ใช่ยิงคำขอเปล่า
+    goDay(this.value || (st.day && st.day.today));
+  });
+
+  $("sStockSort").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button[data-sort]");
+    if (!b) return;
+    st.stockSort = b.getAttribute("data-sort");
+    [].forEach.call(this.querySelectorAll("button"), function (x) {
+      x.setAttribute("aria-pressed", x === b ? "true" : "false");
+    });
+    renderWallStock();
+  });
 
   /* ---------- กราฟของไหนออกเยอะ ออกน้อย ---------- */
   $("sMvRange").addEventListener("click", function (ev) {

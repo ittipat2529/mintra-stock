@@ -270,6 +270,41 @@
     <!-- ---------- จอติดผนังคลัง ทีวีเครื่องเดียว ไม่มีใครต้องกดอะไร ---------- -->
     <div id="sWall" hidden>
       <div class="wall" id="sWallIn"></div>
+
+      <!-- เข้า-ออกของวัน — ยอดรวมบอกไม่ได้ว่า "ของอะไร" ซึ่งเป็นสิ่งเดียวที่คนคลัง
+           ต้องรู้ตอนเช็คของท้ายวัน ตัวเลือกวันอยู่นอกส่วนที่วาดใหม่
+           จะได้ไม่โดนสร้างทับตอนข้อมูลรีเฟรชทุกนาที แล้วเคอร์เซอร์เด้งหาย -->
+      <div class="wall wall-sub" id="sDayCard">
+        <div class="wl-sub-head">
+          <div>
+            <b>เข้า-ออกของวัน</b>
+            <span id="sDayNote"></span>
+          </div>
+          <div class="wl-pick">
+            <button type="button" id="sDayPrev" title="วันก่อนหน้าที่มีรายการ" aria-label="วันก่อนหน้าที่มีรายการ">◀</button>
+            <input type="date" id="sDayDate" aria-label="เลือกวันที่">
+            <button type="button" id="sDayNext" title="วันถัดไปที่มีรายการ" aria-label="วันถัดไปที่มีรายการ">▶</button>
+            <button type="button" id="sDayToday" class="wl-today">วันนี้</button>
+          </div>
+        </div>
+        <div id="sDayIn"></div>
+      </div>
+
+      <!-- ของในคลังตอนนี้ จำนวนชิ้นล้วน ไม่มีต้นทุนและมูลค่าเลย
+           จอนี้แขวนอยู่ในคลังที่ใครก็เดินผ่าน -->
+      <div class="wall wall-sub" id="sStockCard">
+        <div class="wl-sub-head">
+          <div>
+            <b>ของในคลัง</b>
+            <span id="sStockNote"></span>
+          </div>
+          <div class="seg wl-seg" id="sStockSort" role="group" aria-label="เรียงรายการ">
+            <button type="button" data-sort="name" aria-pressed="true">เรียงตามชื่อ</button>
+            <button type="button" data-sort="qty" aria-pressed="false">เรียงตามจำนวน</button>
+          </div>
+        </div>
+        <div id="sStockIn"></div>
+      </div>
     </div>
 
 

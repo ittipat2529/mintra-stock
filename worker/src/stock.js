@@ -234,14 +234,28 @@ function nowIso() { return new Date().toISOString(); }
  * ช่วงเวลาของ "วันนี้" ตามเวลาไทย แปลงเป็น UTC เพื่อเทียบกับ ts ที่เก็บเป็น ISO
  * ต้องคิดแบบนี้ ไม่งั้นยอดของวันจะตัดตอนเจ็ดโมงเช้าแทนเที่ยงคืน
  */
-function bkkDay(now) {
-  const date = new Date((now || Date.now()) + 7 * 3600000).toISOString().slice(0, 10);
+/**
+ * ช่วงเวลาของ "หนึ่งวัน" ตามเวลาไทย คิดจากวันที่ที่ส่งมา
+ *
+ * ต้องคิดเป็นเวลาไทย ไม่ใช่ UTC เพราะของที่ยิงตอนห้าโมงเย็นวันจันทร์
+ * ถ้าตัดวันด้วย UTC จะไปโผล่เป็นของวันอังคาร แล้วยอดรับเข้าของแต่ละวันจะเลื่อนไปหมด
+ */
+function bkkSpan(date) {
   const midnight = Date.parse(date + "T00:00:00Z");
+  if (!isFinite(midnight)) return null;
   return {
     date,
     startUtc: new Date(midnight - 7 * 3600000).toISOString(),
     endUtc: new Date(midnight + 17 * 3600000).toISOString()
   };
+}
+/** วันที่ตามเวลาไทยของเวลาหนึ่ง ๆ — ใช้แปลง ts ในฐานข้อมูลกลับเป็นวันของคนไทย */
+function bkkDateOf(iso) {
+  const t = Date.parse(iso);
+  return isFinite(t) ? new Date(t + 7 * 3600000).toISOString().slice(0, 10) : "";
+}
+function bkkDay(now) {
+  return bkkSpan(new Date((now || Date.now()) + 7 * 3600000).toISOString().slice(0, 10));
 }
 function newId(prefix) {
   return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -902,6 +916,101 @@ export class StockRoom {
       waitingPack: { orders: Number(openRes.o) || 0, lines: Number(openRes.c) || 0, qty: Number(openRes.q) || 0 },
       pendingBarcodes: Number(pend.c) || 0,
       negative: rows.filter(r => r.onHand < 0).map(r => ({ sku: r.sku, name: r.name, onHand: r.onHand }))
+    };
+  }
+
+  /* ---------- เข้า-ออกของวันหนึ่ง ----------
+   * จอผนังบอกยอดรวมของวันนี้อยู่แล้ว (รับเข้า 120 · แพ็คส่ง 88) แต่ยอดรวมตอบไม่ได้ว่า
+   * "ของอะไร" ซึ่งเป็นสิ่งเดียวที่คนคลังต้องรู้ตอนเช็คของท้ายวัน
+   *
+   * จัดกลุ่มตามสินค้า ไม่ใช่ไล่เป็นรายการยิง เพราะของหนึ่งตัวที่ยิงสิบครั้งใน
+   * ออเดอร์เดียว คนอ่านอยากรู้ว่า "ตัวนี้ออกไป 30 ชิ้น" ไม่ใช่สิบบรรทัดละ 3 ชิ้น
+   *
+   * ปุ่มย้อนวันกระโดดไปวันที่ "มีรายการจริง" ไม่ใช่ถอยทีละวันปฏิทิน
+   * คลังหยุดเสาร์อาทิตย์ ถ้าถอยทีละวันก็ต้องกดผ่านวันว่างสองครั้งทุกสัปดาห์
+   *
+   * เป็นจำนวนชิ้นล้วน ไม่มีต้นทุนและไม่มีมูลค่าเลย จอนี้แขวนอยู่ในคลังที่ใครก็เดินผ่าน
+   */
+  #day(q) {
+    const today = bkkDay();
+    let date = str(q && q.get("date"), 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) date = today.date;
+    // ดูอนาคตไม่ได้ ไม่ใช่เพราะห้าม แต่เพราะมันว่างเสมอและทำให้คนคิดว่าจอเสีย
+    if (date > today.date) date = today.date;
+
+    const span = bkkSpan(date);
+    if (!span) return bad("รูปแบบวันที่ไม่ถูกต้อง");
+
+    const rows = this.sql.exec(
+      `SELECT m.sku, m.type, p.name, p.unit,
+              SUM(m.qty) AS q, COUNT(*) AS scans,
+              COUNT(DISTINCT CASE WHEN m.refId <> '' THEN m.refId END) AS refCount,
+              GROUP_CONCAT(DISTINCT CASE WHEN m.refId <> '' THEN m.refId END) AS refs,
+              GROUP_CONCAT(DISTINCT m.userId) AS people,
+              MIN(m.ts) AS firstAt, MAX(m.ts) AS lastAt
+         FROM movements m
+         LEFT JOIN products p ON p.sku = m.sku
+        WHERE m.ts >= ? AND m.ts < ?
+        GROUP BY m.sku, m.type`, span.startUtc, span.endUtc).toArray();
+
+    const split = (v) => String(v || "").split(",").filter(x => x).slice(0, 12);
+    const bucket = { receive: [], issue: [], return_in: [], adjust: [], transfer: [] };
+    let scans = 0;
+
+    rows.forEach(r => {
+      const list = bucket[r.type];
+      if (!list) return;
+      const raw = Number(r.q) || 0;
+      scans += Number(r.scans) || 0;
+      list.push({
+        sku: r.sku,
+        // สินค้าที่ถูกลบออกจากทะเบียนไปแล้ว ประวัติยังต้องอ่านออก ไม่ใช่โชว์เป็นช่องว่าง
+        name: r.name || r.sku,
+        unit: r.unit || "ชิ้น",
+        // แพ็คส่งเก็บเป็นเลขลบ ตรงนี้ส่งเป็นเลขบวกให้หน้าเว็บอ่านง่าย
+        // ส่วนปรับยอดคงเครื่องหมายไว้ เพราะปรับขึ้นกับปรับลงคนละเรื่อง
+        qty: r.type === "issue" ? Math.abs(raw) : raw,
+        scans: Number(r.scans) || 0,
+        refCount: Number(r.refCount) || 0,
+        refs: split(r.refs),
+        people: split(r.people),
+        firstAt: r.firstAt || "",
+        lastAt: r.lastAt || ""
+      });
+    });
+
+    const bySize = (a, b) => (Math.abs(b.qty) - Math.abs(a.qty)) || a.name.localeCompare(b.name, "th");
+    Object.keys(bucket).forEach(k => bucket[k].sort(bySize));
+
+    /* วันก่อนหน้า/ถัดไปที่มีรายการจริง คิดจากเวลาที่ใกล้ขอบช่วงนี้ที่สุด */
+    const near = (sql, arg) => {
+      const r = this.sql.exec(sql, arg).toArray()[0];
+      return r && r.t ? bkkDateOf(r.t) : "";
+    };
+    const prevDate = near(`SELECT MAX(ts) AS t FROM movements WHERE ts < ?`, span.startUtc);
+    const nextRaw = near(`SELECT MIN(ts) AS t FROM movements WHERE ts >= ?`, span.endUtc);
+
+    const sum = (list) => list.reduce((n, r) => n + r.qty, 0);
+    return {
+      date,
+      today: today.date,
+      isToday: date === today.date,
+      prevDate: prevDate || "",
+      nextDate: nextRaw && nextRaw <= today.date ? nextRaw : "",
+      received: bucket.receive,
+      issued: bucket.issue,
+      returned: bucket.return_in,
+      adjusted: bucket.adjust,
+      moved: bucket.transfer,
+      totals: {
+        received: sum(bucket.receive),
+        issued: sum(bucket.issue),
+        returned: sum(bucket.return_in),
+        scans,
+        skus: rows.length
+      },
+      version: this.#version(),
+      serverTime: nowIso()
     };
   }
 
@@ -1664,6 +1773,11 @@ export class StockRoom {
 
     if (path === "/movers") {
       return this.#json(this.#movers(url.searchParams));
+    }
+
+    if (path === "/day") {
+      const res = this.#day(url.searchParams);
+      return this.#json(res, res.__error && res.__error.status);
     }
 
     if (path === "/reservations") {

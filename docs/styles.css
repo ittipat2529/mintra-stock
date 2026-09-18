@@ -1411,3 +1411,131 @@ body.cam-on{overflow:hidden}
   .mv-n{grid-column:1/-1;white-space:normal}
   .mv-v{min-width:0}
 }
+
+/* ============================================================
+   จอผนังคลัง — เข้า-ออกของวัน และรายการของในคลัง
+   ใช้ชุดสีของจอผนังโดยเฉพาะ จอนี้มืดเสมอไม่ว่าเครื่องจะตั้งธีมอะไร
+   ============================================================ */
+.wall-sub{margin-top:18px}
+.wl-sub-head{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;
+  padding-bottom:15px;border-bottom:1px solid var(--wline);
+}
+.wl-sub-head>div:first-child{flex:1;min-width:0}
+.wl-sub-head b{
+  display:block;font-family:"IBM Plex Sans Thai Looped","IBM Plex Sans Thai",sans-serif;
+  font-size:21px;font-weight:700;line-height:1.25;
+}
+.wl-sub-head span{display:block;font-size:13.5px;color:var(--wink2);margin-top:2px}
+
+/* ตัวเลือกวัน ปุ่มใหญ่พอให้กดด้วยนิ้วในคลัง ไม่ใช่เป้าเล็ก ๆ ที่ต้องเล็ง */
+.wl-pick{display:flex;align-items:center;gap:8px;flex:none}
+/* ช่องวันที่ของเบราว์เซอร์ยืดเต็มที่ว่างถ้าปล่อยไว้ แล้วดันปุ่มตกบรรทัด
+   บังคับความกว้างไว้ ปุ่มย้อนวันกับปุ่มวันนี้จะได้อยู่แถวเดียวกันเสมอ */
+.wl-pick input{width:170px;flex:none}
+.wl-pick button,.wl-pick input{
+  font:inherit;font-size:15px;font-weight:600;color:var(--wink);
+  background:var(--wsurface);border:1px solid var(--wline);
+  border-radius:11px;padding:10px 14px;min-height:44px;cursor:pointer;
+  transition:background .14s,border-color .14s,color .14s;
+}
+.wl-pick input{cursor:text;color-scheme:dark;font-variant-numeric:tabular-nums}
+.wl-pick button:hover:not(:disabled){background:var(--wline);border-color:var(--wink2)}
+.wl-pick button:disabled{opacity:.35;cursor:default}
+.wl-pick button:focus-visible,.wl-pick input:focus-visible{outline:2px solid var(--wok);outline-offset:2px}
+.wl-today[data-on=true]{background:var(--wokbg);border-color:var(--wok);color:var(--wok)}
+
+.wl-seg{flex:none;background:var(--wsurface);border-color:var(--wline)}
+.wl-seg button{color:var(--wink2);font-size:14px;min-height:38px}
+.wl-seg button[aria-pressed=true]{background:var(--wok);color:#04201a;box-shadow:none}
+.wl-seg button:not([aria-pressed=true]):hover{color:var(--wink);background:var(--wline)}
+
+/* ---------- สองฝั่ง เข้า / ออก ---------- */
+.wl-io{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding-top:18px}
+@media (max-width:860px){.wl-io{grid-template-columns:1fr}}
+@media (max-width:640px){
+  .wl-pick{width:100%;flex-wrap:wrap}
+  .wl-pick input{flex:1;width:auto;min-width:130px}
+  .wl-seg{width:100%}
+}
+.wl-col{min-width:0}
+.wl-col>h4{
+  display:flex;align-items:baseline;gap:10px;margin:0 0 11px;
+  font-family:"IBM Plex Sans Thai Looped","IBM Plex Sans Thai",sans-serif;
+  font-size:17px;font-weight:700;
+}
+.wl-col>h4 i{width:11px;height:11px;border-radius:3px;flex:none;align-self:center}
+.wl-col>h4 em{
+  margin-left:auto;font-style:normal;font-size:20px;font-weight:700;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+}
+.wl-col[data-io=in] h4 i{background:var(--wok)}
+.wl-col[data-io=in] h4 em{color:var(--wok)}
+.wl-col[data-io=out] h4 i{background:var(--wlow)}
+.wl-col[data-io=out] h4 em{color:var(--wlow)}
+
+.wl-line{
+  display:flex;align-items:center;gap:14px;
+  padding:11px 15px;border-radius:12px;margin-bottom:8px;
+  background:var(--wsurface);border:1px solid var(--wline);
+}
+.wl-line>div{flex:1;min-width:0}
+.wl-line b{
+  display:block;font-size:16.5px;font-weight:600;line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.wl-line em{
+  display:block;font-style:normal;font-size:12px;color:var(--wink2);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.wl-q{
+  flex:none;text-align:right;font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.wl-q b{display:block;font-size:26px;font-weight:700;line-height:1}
+.wl-q span{font-size:11.5px;color:var(--wink2)}
+.wl-col[data-io=in] .wl-q b{color:var(--wok)}
+.wl-col[data-io=out] .wl-q b{color:var(--wlow)}
+
+/* รับคืนกับปรับยอดขึ้นเฉพาะวันที่มีจริง ไม่ใช่ช่องว่างสองช่องทุกวัน */
+.wl-extra{
+  display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  margin-top:16px;padding-top:16px;border-top:1px solid var(--wline);
+}
+@media (max-width:860px){.wl-extra{grid-template-columns:1fr}}
+.wl-extra .wl-q b{color:var(--wblue)}
+.wl-extra .wl-col[data-io=adj] .wl-q b{color:var(--wink)}
+.wl-extra h4 i{background:var(--wblue)}
+.wl-extra .wl-col[data-io=adj] h4 i{background:var(--wink2)}
+
+/* ---------- รายการของในคลัง ----------
+   กริดหลายคอลัมน์ เพราะทีวีในคลังไม่มีใครเดินไปเลื่อนหน้าจอ
+   ของยี่สิบกว่าตัวต้องเห็นครบในจอเดียว */
+.wl-stock{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:9px;padding-top:18px;
+}
+.wl-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:12px;
+  background:var(--wsurface);border:1px solid var(--wline);
+}
+.wl-item>div{flex:1;min-width:0}
+.wl-item b{
+  display:block;font-size:15.5px;font-weight:600;line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.wl-item em{
+  display:block;font-style:normal;font-size:11px;color:var(--wink2);margin-top:1px;
+  font-family:"IBM Plex Mono",monospace;
+}
+.wl-item .wl-q b{font-size:23px;color:var(--wink)}
+/* ของหมดไม่ใช่ "ศูนย์เฉย ๆ" มันคือขายต่อไม่ได้ ต้องเห็นต่างจากแถวอื่นตั้งแต่ไกล */
+.wl-item[data-out=true]{background:var(--woutbg);border-color:var(--wout)}
+.wl-item[data-out=true] .wl-q b{color:var(--wout)}
+.wl-item[data-neg=true] .wl-q b{color:var(--wout)}
+
+.wl-empty{
+  margin:18px 0 0;padding:30px 20px;text-align:center;font-size:16px;color:var(--wink2);
+  background:var(--wsurface);border:1px solid var(--wline);border-radius:14px;line-height:1.7;
+}
