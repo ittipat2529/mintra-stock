@@ -67,6 +67,7 @@
     mine: [], board: null, alerts: [], boardTimer: null, alertAt: 0,
     movers: null, moverDays: 30, moverAt: 0,
     day: null, dayDate: "", dayAt: 0, dayTrail: null, stockSort: "name",
+    cart: [], cartMode: "", confirming: false,
     counts: [], count: null, countFilter: "all", adjReasons: {},
     value: null, receipts: [], adjustments: [], rc: null,
     queued: 0, flushing: false,
@@ -570,6 +571,19 @@
 
   function setMode(m) {
     if (!MODES[m]) { clearMode(); return; }
+    /* ของที่ยิงค้างไว้ผูกกับโหมดที่ยิงตอนนั้น ถ้าปล่อยให้สลับโหมดทั้งที่ยังค้าง
+       ของที่ยิงไว้ตอนรับเข้าจะถูกยืนยันเป็นแพ็คส่ง — ผิดทางสองเท่าและเงียบสนิท */
+    if (st.cart.length && st.cartMode && st.cartMode !== m) {
+      beep("bad");
+      A.toast("ยังมี " + st.cart.length + " รายการค้างอยู่ในโหมด" + MODES[st.cartMode].name
+        + " — กดยืนยันหรือล้างรายการก่อนถึงจะเปลี่ยนโหมดได้");
+      setTimeout(function () {
+        document.querySelectorAll("#sModeBar .sm-tabs button").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.getAttribute("data-mode") === st.cartMode));
+        });
+      }, 0);
+      return;
+    }
     st.mode = m;
     st.tally = 0;
     rememberMode(m);
@@ -593,6 +607,7 @@
       b.setAttribute("aria-pressed", String(b.getAttribute("data-mode") === m));
     });
     renderRecent();
+    renderCart();
     focusCode();
   }
 
@@ -610,6 +625,7 @@
       b.setAttribute("aria-pressed", "false");
     });
     renderRecent();
+    renderCart();
   }
 
   /**
@@ -624,12 +640,12 @@
     if (!MODES[st.mode]) { el.textContent = ""; return; }
     var off = navigator.onLine === false || st.conn !== "on";
     if (off && st.mode === "issue") {
-      el.innerHTML = '<b style="color:var(--opex)">ออฟไลน์อยู่ — ยิงแพ็คส่งได้ '
-        + "แต่เป็นการตัดออกโดยไม่รู้ยอดจริง บางตัวอาจติดลบตอนส่งขึ้นระบบ "
-        + "ระบบจะสรุปให้ตรวจหลังส่งเสร็จ</b>";
+      el.innerHTML = '<b style="color:var(--opex)">ออฟไลน์อยู่ — ยิงใส่รายการได้ปกติ '
+        + "แต่ยอดคงเหลือที่เห็นอาจไม่ใช่ของจริง กดยืนยันแล้วจะเข้าคิวรอส่ง "
+        + "บางตัวอาจติดลบตอนส่งขึ้นระบบ</b>";
     } else if (off) {
-      el.innerHTML = '<b style="color:var(--cost)">ออฟไลน์อยู่ — โหมดนี้ยิงได้ปกติ '
-        + "เพราะเป็นการบวกเข้า ไม่ต้องรู้ยอดปัจจุบัน</b>";
+      el.innerHTML = '<b style="color:var(--cost)">ออฟไลน์อยู่ — ยิงใส่รายการได้ปกติ '
+        + "กดยืนยันแล้วจะเข้าคิวรอส่งเมื่อเน็ตกลับมา</b>";
     } else {
       el.textContent = MODES[st.mode].hint;
     }
@@ -700,108 +716,89 @@
      opts.quietOk = กล้องส่งเสียงยืนยันไปแล้วตอนอ่านติด ไม่ต้องส่งซ้ำ
      แต่เสียง "ผิด" ทุกแบบยังดังเหมือนเดิม เพราะนั่นคือเสียงที่คนต้องได้ยินที่สุด
    */
+  /**
+     ยิงหนึ่งครั้ง = เพิ่มเข้า "รายการรอยืนยัน" ไม่ใช่ตัดสต็อกทันที
+
+     เดิมยิงปุ๊บยอดขยับปั๊บ ซึ่งเร็วดีแต่ผิดแล้วแก้ยาก — ยิงผิดโหมด ยิงผิดตัว
+     ยิงเกินจำนวน ต้องไปตามแก้ด้วยการปรับยอดซึ่งทิ้งรอยไว้ในประวัติตลอดไป
+     ตอนนี้ของค้างอยู่ในรายการจนกว่าจะกดยืนยัน ลบทิ้งก่อนยืนยันได้โดยไม่เหลือร่องรอย
+
+     ที่ต้องแลกคือ **ยอดยังไม่ขยับจนกว่าจะกดยืนยัน** จอฝ่ายขายจึงยังเห็นของที่
+     กำลังถูกแพ็คอยู่ว่ายังขายได้ ถ้าต้องกันของตั้งแต่ตอนรับออเดอร์ให้ใช้การจอง
+     ซึ่งกันของทันทีตั้งแต่ก่อนแพ็ค — คนละเครื่องมือกัน
+
+     ตรงนี้ไม่ยิงคำขออะไรเลย จึงทำงานได้เหมือนกันทั้งตอนมีเน็ตและไม่มี
+     เน็ตมาเกี่ยวตอนกดยืนยันเท่านั้น
+   */
   function submitScan(raw, opts) {
     var quietOk = !!(opts && opts.quietOk);
     var code = String(raw || "").trim();
     if (!code) return;
 
-    // กำแพงชั้นที่สอง เผื่อมีรหัสเข้ามาทางอื่น เช่นคิวออฟไลน์หรือกล้อง
+    // กำแพงชั้นที่สอง เผื่อมีรหัสเข้ามาทางอื่น เช่นกล้องหรือการผูกบาร์โค้ด
     if (!MODES[st.mode]) {
       beep("bad");
       A.toast("เลือกโหมดก่อนยิง — รับเข้า แพ็คส่ง หรือรับคืน");
       return;
     }
-
-    var units = Math.max(1, Math.trunc(Number($("sUnits").value) || 1));
-
     if (MODES[st.mode].needReason && !st.reason) {
       beep("bad");
       A.toast("เลือกเหตุผลที่คืนก่อน");
       return;
     }
-
-    var payload = {
-      scanId: uuid(),
-      barcode: code,
-      mode: st.mode,
-      units: units,
-      refId: $("sRef").value.trim(),
-      // โหมดรับคืนไม่ส่งคลังไป เพราะเหตุผลเป็นตัวกำหนด และเซิร์ฟเวอร์ตัดสินเอง
-      locationId: MODES[st.mode].needReason ? undefined : ($("sLoc").value || "main"),
-      reason: st.reason,
-      note: $("sNote").value.trim(),
-      device: (navigator.userAgent.indexOf("Mobile") >= 0 ? "มือถือ" : "คอม")
-    };
-
-    // ต้นทุนส่งไปเฉพาะตอนรับเข้าและเฉพาะคนที่มีสิทธิ์ เซิร์ฟเวอร์ตรวจซ้ำอีกชั้น
-    var costRaw = (st.mode === "receive" && canManage()) ? $("sCostIn").value.trim() : "";
-    if (costRaw !== "" && isFinite(Number(costRaw)) && Number(costRaw) >= 0) {
-      payload.costPerUnit = Number(costRaw);
-    }
-
-    // ขึ้นชื่อสินค้าให้เห็นทันทีจากแผนที่บาร์โค้ดในเครื่อง ไม่ต้องรอเซิร์ฟเวอร์
-    var guess = st.byBarcode[code];
-    var guessName = guess && st.bySku[guess.sku] ? st.bySku[guess.sku].name : null;
-
-    /* ออฟไลน์ชัด ๆ ก็เข้าคิวเลย ไม่ต้องรอ fetch หมดเวลา คนแพ็คของยิงรัวอยู่
-       จอง (reserve) ไม่มีเส้นทางนี้เลย เพราะจองจากตัวเลขที่ไม่สดคือต้นเหตุของการขายซ้ำ */
-    if (navigator.onLine === false) {
-      queueAdd("scan", payload).then(function () {
-        if (!quietOk) beep("ok");
-        pushRecent({ name: guessName || code, delta: 0, queued: true,
-                     issueOffline: st.mode === "issue" });
-      });
+    if (st.cart.length >= CART_MAX) {
+      beep("bad");
+      A.toast("รายการเต็ม " + CART_MAX + " ตัวแล้ว กดยืนยันก่อนแล้วค่อยยิงต่อ");
       return;
     }
 
-    A.api("/stock/scan", "POST", payload).then(function (r) {
-      if (r.unknownBarcode) { beep("unknown"); openBarcodeDialog(code, units); return; }
-      if (!r.ok) { beep("bad"); A.toast(r.error || "ยิงไม่สำเร็จ"); return; }
+    var units = Math.max(1, Math.trunc(Number($("sUnits").value) || 1));
 
-      if (r.row) { mergeRows([r.row]); st.version = r.version || st.version; st.lastSync = Date.now(); }
+    /* บาร์โค้ดที่ไม่รู้จักต้องรู้ตั้งแต่ตอนยิง ไม่ใช่ไปโผล่ตอนกดยืนยัน
+       แผนที่บาร์โค้ดอยู่ในเครื่องอยู่แล้วจาก snapshot และอัปเดตสดทาง WebSocket */
+    var hit = st.byBarcode[code];
+    if (!hit || !st.bySku[hit.sku]) {
+      beep("unknown");
+      openBarcodeDialog(code, units);
+      return;
+    }
 
-      if (r.duplicate) {
-        beep("dup");
-        pushRecent({ name: r.name, delta: 0, left: r.row ? r.row.onHand : null, dup: true });
-      } else {
-        st.tally += Math.abs(r.delta || 0);
-        $("sTally").textContent = n0(st.tally);
-        if (r.negative) beep("bad"); else if (!quietOk) beep("ok");
-        pushRecent({
-          name: r.name || guessName || code, delta: r.delta,
-          left: r.row ? r.row.onHand : null,
-          negative: !!r.negative,
-          low: r.row && r.row.reorderPoint > 0 && r.row.available <= r.row.reorderPoint,
-          packQty: r.packQty, units: r.units,
-          damaged: r.locationId === "damaged",
-          picked: r.pickedFromReservation || 0,
-          cost: r.costPerUnit == null ? null : r.costPerUnit,
-          costAvg: r.costAvg == null ? null : r.costAvg
-        });
+    var prod = st.bySku[hit.sku];
+    var pack = Math.max(1, Number(hit.packQty) || 1);
 
-        /* ล้างช่องต้นทุนหลังยิงสำเร็จ — ตั้งใจให้ต้องพิมพ์ใหม่ทุกตัว
-           ถ้าค้างไว้ ของตัวถัดไปจะได้ต้นทุนของตัวก่อนแบบเงียบ ๆ
-           ซึ่งผิดแบบที่ไม่มีใครเห็น เพราะตัวเลขก็ยังดูสมเหตุสมผล */
-        if (payload.costPerUnit != null) $("sCostIn").value = "";
-        if (r.pickedFromReservation > 0) loadMine();
-        if (r.negative) A.toast("ยอดติดลบแล้ว — ของจริงไม่ตรงตัวเลข ต้องไปนับ");
-      }
-      renderBrowse();
-    }).catch(function (err) {
-      // เน็ตล่มระหว่างส่ง = เข้าคิว · เซิร์ฟเวอร์ปฏิเสธ = ของจริงผิด ห้ามเข้าคิว
-      if (isNetworkErr(err)) {
-        queueAdd("scan", payload).then(function () {
-          if (!quietOk) beep("ok");
-          pushRecent({ name: guessName || code, delta: 0, queued: true,
-                       issueOffline: st.mode === "issue" });
-        });
-        return;
-      }
-      beep("bad");
-      pushRecent({ name: guessName || code, delta: 0, failed: true, msg: err && err.message });
-      A.handleErr(err);
-    });
+    // ต้นทุนส่งได้เฉพาะตอนรับเข้าและเฉพาะคนที่มีสิทธิ์ เซิร์ฟเวอร์ตรวจซ้ำอีกชั้น
+    var cost = null;
+    if (st.mode === "receive" && canManage()) {
+      var raw2 = $("sCostIn").value.trim();
+      if (raw2 !== "" && isFinite(Number(raw2)) && Number(raw2) >= 0) cost = Number(raw2);
+    }
+
+    /* ยิงตัวเดิมซ้ำ = บวกเข้าบรรทัดเดิม ไม่ใช่ขึ้นบรรทัดใหม่
+       คนยิงของสิบชิ้นทีละชิ้นอยากเห็น "10" ไม่ใช่สิบบรรทัดละหนึ่งที่ต้องบวกเอง */
+    var line = null, i;
+    for (i = 0; i < st.cart.length; i++) {
+      if (st.cart[i].barcode === code) { line = st.cart[i]; break; }
+    }
+    if (line) {
+      line.units += units;
+      // ต้นทุนที่พิมพ์ใหม่ทับของเดิม บิลเดียวกันราคาต่อหน่วยต้องเท่ากันอยู่แล้ว
+      if (cost != null) line.cost = cost;
+    } else {
+      st.cart.push({
+        // scanId ออกตั้งแต่ตอนเข้ารายการ กดยืนยันซ้ำหรือส่งซ้ำจึงไม่ถูกนับสองรอบ
+        scanId: uuid(),
+        barcode: code, sku: prod.sku, name: prod.name, unit: prod.unit || "ชิ้น",
+        packQty: pack, units: units, cost: cost
+      });
+    }
+
+    if (cost != null) $("sCostIn").value = "";
+    st.cartMode = st.mode;
+    saveCart();
+    if (!quietOk) beep("ok");
+    renderCart();
   }
+
 
   /**
      ช่องต้นทุนโชว์เฉพาะโหมดรับเข้า และเฉพาะคนที่มีสิทธิ์เห็นต้นทุน
@@ -820,6 +817,306 @@
     }
   }
 
+  /* ================= รายการรอยืนยัน =================
+     ตะกร้าอยู่ในเครื่อง ไม่ใช่บนเซิร์ฟเวอร์ — ของที่ยังไม่ยืนยันยังไม่ใช่ข้อเท็จจริง
+     จึงไม่ควรไปปรากฏบนจอคนอื่น แต่ต้องรอดจากการกดรีเฟรชหรือแท็บเล็ตดับ
+     เก็บลง localStorage ไว้ ไม่งั้นงานที่ยิงไปสิบนาทีหายเพราะเผลอปัดแอปทิ้ง
+   */
+
+  var CART_KEY = "mintra-stock:cart";
+  var CART_MAX = 150;
+
+  function saveCart() {
+    try {
+      if (!st.cart.length) localStorage.removeItem(CART_KEY);
+      else localStorage.setItem(CART_KEY, JSON.stringify({ mode: st.cartMode, lines: st.cart }));
+    } catch (e) { /* โหมดส่วนตัวเขียนไม่ได้ ตะกร้ายังใช้ได้ในหน้านี้ */ }
+  }
+
+  function loadCart() {
+    try {
+      var d = JSON.parse(localStorage.getItem(CART_KEY) || "null");
+      if (d && MODES[d.mode] && Array.isArray(d.lines) && d.lines.length) {
+        st.cartMode = d.mode;
+        st.cart = d.lines.filter(function (x) { return x && x.barcode && x.units > 0; });
+      }
+    } catch (e) { /* อ่านไม่ออกก็เริ่มจากตะกร้าว่าง ดีกว่าหน้าพัง */ }
+  }
+
+  function cartPieces(l) { return (Number(l.units) || 0) * (Math.max(1, Number(l.packQty) || 1)); }
+  function cartTotal() {
+    return st.cart.reduce(function (n, l) { return n + cartPieces(l); }, 0);
+  }
+
+  /* ตัวไหนจะทำให้ยอดติดลบ คิดจากยอดสดที่หน้าเว็บถืออยู่
+     ระบบไม่บล็อกการยิงจนติดลบ (ของอยู่ในมือแล้ว) แต่ต้องรู้ก่อนกด ไม่ใช่รู้ตอนของหายไปแล้ว */
+  function cartShort(l) {
+    if (st.cartMode !== "issue") return 0;
+    var p = st.bySku[l.sku];
+    if (!p) return 0;
+    var need = cartPieces(l);
+    return need > p.onHand ? need - p.onHand : 0;
+  }
+
+  function renderCart() {
+    var card = $("sCartCard");
+    if (!card) return;
+    if (!st.cart.length) {
+      card.hidden = true;
+      saveCart();
+      return;
+    }
+    card.hidden = false;
+
+    var cfg = MODES[st.cartMode] || {};
+    var pieces = cartTotal();
+    $("sCartNote").textContent = cfg.name + " · " + n0(st.cart.length) + " รายการ · รวม " + n0(pieces) + " ชิ้น";
+    $("sCartWarn").innerHTML = "<b>ยังไม่ได้ตัดสต็อก</b> — ยอดจะขยับก็ต่อเมื่อกดยืนยันด้านล่าง"
+      + " ปิดหน้านี้ไปก่อนยืนยัน รายการจะยังอยู่ แต่ของยังไม่ถูกบันทึก";
+
+    $("sCartList").innerHTML = '<div class="cart-l">' + st.cart.map(function (l, i) {
+      var short = cartShort(l);
+      var bits = [l.sku];
+      if (l.packQty > 1) bits.push("ยิง " + n0(l.units) + " ลัง × " + n0(l.packQty));
+      if (l.cost != null) bits.push("ต้นทุน " + A.baht(l.cost) + "/หน่วย");
+      if (short > 0) bits.push("จะติดลบ " + n0(short) + " " + (l.unit || "ชิ้น"));
+      return '<div class="cart-r"' + (short > 0 ? ' data-neg="true"' : "") + ">"
+        + "<div><b>" + esc(l.name) + "</b><em>" + esc(bits.join(" · ")) + "</em></div>"
+        + '<div class="cart-n">'
+        +   '<button type="button" data-act="minus" data-i="' + i + '" aria-label="ลดจำนวน">−</button>'
+        +   '<input type="number" min="1" max="5000" step="1" data-act="set" data-i="' + i
+        +     '" value="' + n0(l.units).replace(/,/g, "") + '" aria-label="จำนวนของ ' + esc(l.name) + '">'
+        +   '<button type="button" data-act="plus" data-i="' + i + '" aria-label="เพิ่มจำนวน">+</button>'
+        + "</div>"
+        + '<button type="button" class="cart-x" data-act="del" data-i="' + i + '">ลบ</button>'
+        + "</div>";
+    }).join("") + "</div>";
+
+    $("sCartGo").textContent = "ยืนยัน" + cfg.name + " " + n0(pieces) + " ชิ้น";
+  }
+
+  function cartEdit(i, act, val) {
+    var l = st.cart[i];
+    if (!l) return;
+    if (act === "del") st.cart.splice(i, 1);
+    else if (act === "plus") l.units += 1;
+    else if (act === "minus") l.units = Math.max(1, l.units - 1);
+    else if (act === "set") l.units = Math.max(1, Math.min(5000, Math.trunc(Number(val) || 1)));
+    saveCart();
+    /* พิมพ์ในช่องจำนวนแล้ววาดใหม่ทันที = ลบช่องที่กำลังโฟกัสทิ้งกลางคัน
+       เบราว์เซอร์โยน error ออกมาตรง ๆ ตอนนั้น รอให้ event เดินจบก่อนค่อยวาด */
+    if (act === "set") setTimeout(renderCart, 0);
+    else renderCart();
+  }
+
+  function clearCart(quiet) {
+    if (!st.cart.length) return;
+    if (!quiet && !confirm("ลบรายการที่ยิงไว้ทั้ง " + st.cart.length + " รายการทิ้ง?\n"
+        + "ของยังไม่ถูกบันทึกอยู่แล้ว จึงไม่มีอะไรต้องแก้ย้อนหลัง")) return;
+    st.cart = [];
+    st.cartMode = "";
+    saveCart();
+    renderCart();
+    if (!quiet) A.toast("ล้างรายการแล้ว");
+  }
+
+  /* ---------- สรุปยอดก่อนยืนยัน ---------- */
+
+  function openConfirm() {
+    if (!st.cart.length) return;
+    var cfg = MODES[st.cartMode] || {};
+    var pieces = cartTotal();
+    var ref = $("sRef").value.trim();
+    var loc = cfg.needReason ? "" : ($("sLoc").value || "main");
+    var locName = "";
+    st.locations.forEach(function (x) { if (x.id === loc) locName = x.name; });
+    var reason = "";
+    st.reasons.forEach(function (x) { if (x.key === st.reason) reason = x.label; });
+
+    $("sCfTitle").textContent = "สรุปยอดก่อนยืนยัน" + cfg.name;
+    $("sCfSub").textContent = [
+      st.cart.length + " รายการ · รวม " + n0(pieces) + " ชิ้น",
+      ref ? cfg.ref + " " + ref : "ยังไม่ได้ใส่" + cfg.ref,
+      cfg.needReason ? "เหตุผล: " + (reason || "-") : "เข้าคลัง: " + (locName || loc)
+    ].join(" · ");
+
+    var hasCost = st.cart.some(function (l) { return l.cost != null; });
+    var shortLines = st.cart.filter(function (l) { return cartShort(l) > 0; });
+
+    $("sCfBody").innerHTML = '<table class="cf-t"><thead><tr>'
+      + "<th>สินค้า</th><th class=\"r\">จำนวน</th>"
+      + (hasCost ? "<th class=\"r\">ต้นทุน/หน่วย</th>" : "")
+      + "</tr></thead><tbody>"
+      + st.cart.map(function (l) {
+          var short = cartShort(l);
+          var p = st.bySku[l.sku];
+          return "<tr" + (short > 0 ? ' data-neg="true"' : "") + ">"
+            + "<td>" + esc(l.name)
+            +   '<span class="sub">' + esc(l.sku)
+            +     (l.packQty > 1 ? " · ยิง " + n0(l.units) + " ลัง × " + n0(l.packQty) : "")
+            +     (short > 0
+                    ? " · เหลือ " + n0(p ? p.onHand : 0) + " จะติดลบ " + n0(short)
+                    : (p ? " · เหลือ " + n0(p.onHand) : ""))
+            +   "</span></td>"
+            + '<td class="r">' + n0(cartPieces(l)) + " " + esc(l.unit || "ชิ้น") + "</td>"
+            + (hasCost ? '<td class="r">' + (l.cost == null ? "—" : A.baht(l.cost)) + "</td>" : "")
+            + "</tr>";
+        }).join("")
+      + "</tbody><tfoot><tr><td>รวม " + n0(st.cart.length) + " รายการ</td>"
+      + '<td class="r">' + n0(pieces) + " ชิ้น</td>"
+      + (hasCost ? "<td></td>" : "")
+      + "</tr></tfoot></table>";
+
+    var warn = "";
+    if (shortLines.length) {
+      warn += '<p class="cf-warn"><b>' + n0(shortLines.length) + " รายการจะทำให้ยอดติดลบ</b> — "
+        + "ของจริงไม่ตรงตัวเลขในระบบ ยืนยันได้ (ของอยู่ในมือแล้ว) "
+        + "แต่หัวหน้าจะเห็นเป็นรายการที่ต้องไปนับ</p>";
+    }
+    if (!ref) {
+      warn += '<p class="cf-note">ยังไม่ได้ใส่' + esc(cfg.ref)
+        + " — ยืนยันได้ แต่จะตามกลับไปหาใบต้นทางไม่ได้</p>";
+    }
+    if (st.cartMode === "receive" && canManage() && st.cart.some(function (l) { return l.cost == null; })) {
+      warn += '<p class="cf-note">บางรายการยังไม่ได้ใส่ต้นทุน ใส่ทีหลังที่แท็บต้นทุนได้</p>';
+    }
+    if (navigator.onLine === false) {
+      warn += '<p class="cf-note">ตอนนี้ไม่มีเน็ต — กดยืนยันแล้วรายการจะเข้าคิวรอส่ง '
+        + "ยอดบนจออื่นจะยังไม่ขยับจนกว่าเน็ตจะกลับมา</p>";
+    }
+    $("sCfWarn").innerHTML = warn;
+    $("sCfDlg").showModal();
+  }
+
+  /**
+     ส่งทีเดียวทั้งชุด — เซิร์ฟเวอร์กันซ้ำด้วย scanId ที่ออกตั้งแต่ตอนเข้ารายการ
+     กดยืนยันสองครั้งหรือส่งซ้ำตอนเน็ตกระตุก จึงไม่ถูกนับสองรอบ
+
+     บรรทัดที่ส่งผ่านจะหลุดออกจากรายการ บรรทัดที่พลาดยังค้างไว้ให้แก้
+     ไม่ใช่ล้างทั้งกระดานแล้วให้คนไปเดาเองว่าอันไหนเข้าอันไหนไม่เข้า
+   */
+  function doConfirm() {
+    if (st.confirming || !st.cart.length) return;
+    var cfg = MODES[st.cartMode] || {};
+    var ref = $("sRef").value.trim();
+    var note = $("sNote").value.trim();
+    var loc = cfg.needReason ? undefined : ($("sLoc").value || "main");
+    var device = navigator.userAgent.indexOf("Mobile") >= 0 ? "มือถือ" : "คอม";
+
+    var lines = st.cart.slice();
+    var scans = lines.map(function (l) {
+      var pl = {
+        scanId: l.scanId, barcode: l.barcode, mode: st.cartMode, units: l.units,
+        refId: ref, locationId: loc, reason: st.reason, note: note, device: device
+      };
+      if (l.cost != null) pl.costPerUnit = l.cost;
+      return pl;
+    });
+
+    st.confirming = true;
+    A.setBusy(true, $("sCfGo"), "กำลังบันทึก…");
+
+    function finish() {
+      st.confirming = false;
+      A.setBusy(false, $("sCfGo"), "ยืนยัน");
+      renderCart();
+      renderBrowse();
+    }
+
+    /* ไม่มีเน็ตชัด ๆ ก็เข้าคิวเลย ไม่ต้องรอ fetch หมดเวลา */
+    if (navigator.onLine === false) {
+      return Promise.all(scans.map(function (pl) { return queueAdd("scan", pl); })).then(function () {
+        $("sCfDlg").close();
+        lines.forEach(function (l) {
+          pushRecent({ name: l.name, delta: 0, queued: true, issueOffline: st.cartMode === "issue" });
+        });
+        st.cart = [];
+        st.cartMode = "";
+        saveCart();
+        beep("ok");
+        A.toast("ไม่มีเน็ต — เข้าคิวไว้ " + lines.length + " รายการ ระบบจะส่งให้เองเมื่อเน็ตกลับมา");
+        finish();
+      });
+    }
+
+    return A.api("/stock/scan/batch", "POST", { scans: scans }).then(function (r) {
+      $("sCfDlg").close();
+      var results = r.results || [];
+      var keep = [], added = 0, bad = 0, negs = [];
+
+      lines.forEach(function (l, i) {
+        var res = results[i] || {};
+        if (res.unknownBarcode) {
+          keep.push(l);
+          bad++;
+          pushRecent({ name: l.name, delta: 0, failed: true, msg: "บาร์โค้ดนี้ไม่มีในระบบแล้ว" });
+          return;
+        }
+        if (!res.ok) {
+          keep.push(l);
+          bad++;
+          pushRecent({ name: l.name, delta: 0, failed: true, msg: res.error || "บันทึกไม่สำเร็จ" });
+          return;
+        }
+        if (res.row) mergeRows([res.row]);
+        if (res.duplicate) {
+          pushRecent({ name: res.name || l.name, delta: 0, left: res.row ? res.row.onHand : null, dup: true });
+          return;
+        }
+        added += Math.abs(res.delta || 0);
+        if (res.negative) negs.push(res.name || l.name);
+        pushRecent({
+          name: res.name || l.name, delta: res.delta,
+          left: res.row ? res.row.onHand : null,
+          negative: !!res.negative,
+          low: res.row && res.row.reorderPoint > 0 && res.row.available <= res.row.reorderPoint,
+          packQty: res.packQty, units: res.units,
+          damaged: res.locationId === "damaged",
+          picked: res.pickedFromReservation || 0,
+          cost: res.costPerUnit == null ? null : res.costPerUnit,
+          costAvg: res.costAvg == null ? null : res.costAvg
+        });
+      });
+
+      st.version = r.version || st.version;
+      st.lastSync = Date.now();
+      st.cart = keep;
+      if (!keep.length) st.cartMode = "";
+      saveCart();
+
+      st.tally += added;
+      $("sTally").textContent = n0(st.tally);
+
+      if (negs.length) beep("bad"); else beep("ok");
+      A.toast(bad
+        ? "บันทึกแล้ว " + (lines.length - bad) + " รายการ · ไม่ผ่าน " + bad + " รายการ ยังค้างอยู่ในรายการ"
+        : "บันทึก" + cfg.name + " " + n0(added) + " ชิ้นเรียบร้อย");
+      if (negs.length) A.toast(negs.join(", ") + " ยอดติดลบแล้ว — ต้องไปนับ");
+
+      if (results.some(function (x) { return x && x.pickedFromReservation > 0; })) loadMine();
+      focusCode();
+      finish();
+    }).catch(function (err) {
+      // เน็ตล่มระหว่างส่ง = เข้าคิว · เซิร์ฟเวอร์ปฏิเสธ = ของจริงผิด ห้ามเข้าคิว
+      if (isNetworkErr(err)) {
+        return Promise.all(scans.map(function (pl) { return queueAdd("scan", pl); })).then(function () {
+          $("sCfDlg").close();
+          lines.forEach(function (l) {
+            pushRecent({ name: l.name, delta: 0, queued: true, issueOffline: st.cartMode === "issue" });
+          });
+          st.cart = [];
+          st.cartMode = "";
+          saveCart();
+          A.toast("เน็ตหลุดตอนส่ง — เข้าคิวไว้ " + lines.length + " รายการแล้ว");
+          finish();
+        });
+      }
+      beep("bad");
+      A.handleErr(err);
+      finish();
+    });
+  }
+
   function pushRecent(item) {
     item.at = Date.now();
     st.recent.unshift(item);
@@ -833,8 +1130,10 @@
     if (!st.recent.length) {
       // ตอนยังไม่เลือกโหมดยังไม่มีช่องบาร์โค้ดให้โฟกัส ห้ามบอกว่ายิงได้เลย
       box.innerHTML = '<p class="empty">' + (MODES[st.mode]
-        ? "ยังไม่ได้ยิงอะไรในรอบนี้ — โฟกัสอยู่ที่ช่องบาร์โค้ดแล้ว ยิงได้เลย"
-        : "เลือกโหมดก่อน แล้วรายการที่ยิงจะมาขึ้นที่นี่") + "</p>";
+        ? (st.cart.length
+            ? "ยังไม่ได้ยืนยันอะไรในรอบนี้ — ของที่ยิงไว้อยู่ในรายการรอยืนยันด้านบน"
+            : "ยังไม่ได้ยิงอะไรในรอบนี้ — โฟกัสอยู่ที่ช่องบาร์โค้ดแล้ว ยิงได้เลย")
+        : "เลือกโหมดก่อน แล้วรายการที่ยืนยันแล้วจะมาขึ้นที่นี่") + "</p>";
       return;
     }
     box.innerHTML = '<div class="s-recent">' + st.recent.map(function (r) {
@@ -2577,8 +2876,13 @@
     st.boardTimer = null;
 
     paintCam();
+    // ย้ายแท็บไม่ได้ทำให้ของหาย แต่ต้องรู้ว่ายังไม่ได้ยืนยัน ไม่ใช่เดินจากไปเฉย ๆ
+    if (id !== "scan" && st.cart.length) {
+      A.toast("ยังมี " + st.cart.length + " รายการที่ยิงไว้แต่ยังไม่ได้ยืนยัน — อยู่ในแท็บยิงสต็อก");
+    }
     if (id === "browse") { renderBrowse(); loadAlerts(true); loadMine(); loadMovers(true); }
-    if (id === "scan") { setMode(st.mode || lastMode()); loadPending(); paintTransfer(); }
+    // มีของค้างอยู่ก็ต้องกลับเข้าโหมดนั้น ไม่ใช่โหมดที่เครื่องนี้จำไว้ล่าสุด
+    if (id === "scan") { setMode(st.cartMode || st.mode || lastMode()); loadPending(); paintTransfer(); }
     if (id === "wall") {
       loadBoard();
       loadDay(true);
@@ -2611,6 +2915,7 @@
     }
     st.moverDays = moverDays();
     paintMoverRange();
+    loadCart();
     connect();
     refreshQueue();
     if (!st.tickTimer) st.tickTimer = setInterval(paintConn, 1000);
@@ -2742,6 +3047,28 @@
       A.setBusy(false, $("sRsGo"), "ล้างข้อมูล");
     });
   }
+
+  /* ---------- รายการรอยืนยัน ---------- */
+  $("sCartList").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button[data-act]");
+    if (b) cartEdit(Number(b.getAttribute("data-i")), b.getAttribute("data-act"));
+  });
+  $("sCartList").addEventListener("change", function (ev) {
+    var el = ev.target.closest('input[data-act="set"]');
+    if (el) cartEdit(Number(el.getAttribute("data-i")), "set", el.value);
+  });
+  $("sCartClear").addEventListener("click", function () { clearCart(false); });
+  $("sCartGo").addEventListener("click", openConfirm);
+  $("sCfCancel").addEventListener("click", function () { $("sCfDlg").close(); focusCode(); });
+  $("sCfGo").addEventListener("click", doConfirm);
+
+  /* ปิดแท็บทั้งที่ยังมีของค้าง — เตือนไว้ ถึงตะกร้าจะถูกเก็บไว้ให้ก็ตาม
+     เพราะคนที่ปิดไปมักคิดว่ายิงแล้วคือจบ ซึ่งตอนนี้ไม่ใช่ */
+  window.addEventListener("beforeunload", function (ev) {
+    if (!st.cart.length) return;
+    ev.preventDefault();
+    ev.returnValue = "";
+  });
 
   /* ---------- จอผนังคลัง: เลือกวัน และเรียงรายการของ ---------- */
   $("sDayPrev").addEventListener("click", function () { goDay(st.day && st.day.prevDate); });

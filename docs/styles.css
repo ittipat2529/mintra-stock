@@ -1539,3 +1539,83 @@ body.cam-on{overflow:hidden}
   margin:18px 0 0;padding:30px 20px;text-align:center;font-size:16px;color:var(--wink2);
   background:var(--wsurface);border:1px solid var(--wline);border-radius:14px;line-height:1.7;
 }
+
+/* ============================================================
+   รายการรอยืนยัน — ของที่ยิงแล้วแต่ยอดยังไม่ขยับ
+   ต้องเห็นชัดว่าค้างอยู่ ไม่ใช่การ์ดเงียบ ๆ ที่คนเดินจากไปแล้วนึกว่าจบ
+   ============================================================ */
+.cart-card{border-color:var(--accent);box-shadow:var(--shadow-lift)}
+.cart-card>h2{background:var(--accent-soft);border-bottom-color:var(--accent)}
+.cart-warn{
+  margin:0;padding:11px 18px;font-size:12.5px;line-height:1.55;
+  color:var(--cost);background:var(--cost-bg);border-bottom:1px solid var(--line);
+}
+.cart-warn b{font-weight:700}
+
+.cart-l{display:grid;gap:1px;background:var(--line)}
+.cart-r{
+  display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;
+  padding:11px 18px;background:var(--surface);
+}
+.cart-r>div:first-child{min-width:0}
+.cart-r b{
+  display:block;font-size:14.5px;font-weight:600;line-height:1.35;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.cart-r em{
+  display:block;font-style:normal;font-size:11.5px;color:var(--ink-2);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* ตัวที่จะทำให้ยอดติดลบ ต้องเห็นตั้งแต่ยังไม่กดยืนยัน ไม่ใช่รู้ตอนของหายไปแล้ว */
+.cart-r[data-neg=true]{background:var(--opex-bg)}
+.cart-r[data-neg=true] em{color:var(--opex);font-weight:600}
+
+.cart-n{display:flex;align-items:center;gap:6px;flex:none}
+.cart-n button{
+  font:inherit;font-size:17px;font-weight:700;line-height:1;
+  width:36px;height:36px;border-radius:10px;cursor:pointer;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+}
+.cart-n button:hover{background:var(--surface-2)}
+.cart-n button:disabled{opacity:.35;cursor:default}
+.cart-n input{
+  font:inherit;font-size:15px;font-weight:700;text-align:center;
+  width:58px;padding:7px 4px;border-radius:10px;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+}
+.cart-x{
+  font:inherit;font-size:12.5px;padding:8px 10px;border-radius:9px;flex:none;
+  border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;
+}
+.cart-x:hover{color:var(--opex);background:var(--opex-bg)}
+
+.cart-foot{display:flex;align-items:center;gap:11px;flex-wrap:wrap;border-top:1px solid var(--line)}
+.cart-foot .btn-ghost{flex:none;width:auto}
+.cart-foot .btn-main{flex:1;min-width:190px}
+
+/* ---------- กล่องสรุปยอด ---------- */
+.cf-t{width:100%;border-collapse:collapse;font-size:13.5px}
+.cf-t th,.cf-t td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+.cf-t th{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:none}
+.cf-t td.r,.cf-t th.r{text-align:right;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.cf-t tfoot td{border-bottom:0;border-top:2px solid var(--line-strong);font-weight:700;font-size:15px}
+.cf-t tr[data-neg=true] td{background:var(--opex-bg);color:var(--opex)}
+.cf-t .sub{display:block;font-size:11px;color:var(--ink-2);margin-top:2px}
+.cf-t tr[data-neg=true] .sub{color:var(--opex)}
+.cf-warn{
+  margin-top:14px;padding:12px 15px;border-radius:var(--r-sm);font-size:13px;line-height:1.6;
+  background:var(--opex-bg);color:var(--opex);border:1px solid var(--opex);
+}
+.cf-warn b{font-weight:700}
+.cf-note{
+  margin-top:13px;padding:11px 15px;border-radius:var(--r-sm);font-size:12.5px;line-height:1.6;
+  background:var(--surface-2);color:var(--ink-2);
+}
+
+@media (max-width:520px){
+  .cart-r{grid-template-columns:1fr auto;gap:8px 10px}
+  .cart-r>div:first-child{grid-column:1/-1}
+  .cart-foot .btn-main{min-width:0;width:100%}
+}

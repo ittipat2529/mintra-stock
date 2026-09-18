@@ -221,14 +221,26 @@
               <p class="note" id="sCostNote" style="margin-top:6px"></p>
             </div>
 
-            <div class="calc"><span>ยิงไปแล้วรอบนี้</span><b class="num" id="sTally">0</b></div>
+            <div class="calc"><span>ยืนยันไปแล้วรอบนี้</span><b class="num" id="sTally">0</b></div>
             <p class="note" id="sScanHint" style="margin-top:9px"></p>
           </div>
         </div>
 
         <div style="display:grid;gap:20px;min-width:0">
+          <!-- ของที่ยิงแล้วแต่ยังไม่ได้ยืนยัน — ยอดจริงยังไม่ขยับ
+               ต้องเห็นชัดว่ายังค้างอยู่ ไม่ใช่การ์ดเงียบ ๆ ที่คนเดินจากไปแล้วนึกว่าจบ -->
+          <div class="card cart-card" id="sCartCard" hidden>
+            <h2>รายการรอยืนยัน <span class="note" id="sCartNote"></span></h2>
+            <p class="cart-warn" id="sCartWarn"></p>
+            <div id="sCartList"></div>
+            <div class="body cart-foot">
+              <button type="button" class="btn btn-ghost" id="sCartClear">ล้างทั้งหมด</button>
+              <button type="button" class="btn btn-main" id="sCartGo" style="margin:0">ยืนยัน</button>
+            </div>
+          </div>
+
           <div class="card">
-            <h2>เมื่อกี้ <span class="note">ยิงซ้ำใบเดิมระบบไม่นับเพิ่ม</span></h2>
+            <h2>เมื่อกี้ <span class="note">ยืนยันแล้ว ยอดขยับจริง</span></h2>
             <div id="sRecent"></div>
           </div>
           <div class="card" id="sPendCard" hidden>
@@ -633,6 +645,23 @@
 
 <!-- ---------- กล่องเปลี่ยนรหัสผ่าน ---------- -->
 <!-- ---------- ยืนยันล้างข้อมูลทดสอบ ---------- -->
+<!-- สรุปยอดก่อนยืนยัน — อ่านทวนทีละบรรทัดก่อนของจะขยับจริง
+     กล่องนี้ยังเป็นที่เดียวที่บอกล่วงหน้าว่าตัวไหนกำลังจะติดลบ -->
+<dialog id="sCfDlg" class="dlg">
+  <form method="dialog" class="dlg-in">
+    <h2 class="display" id="sCfTitle">สรุปยอดก่อนยืนยัน</h2>
+    <p class="note" id="sCfSub" style="margin:0 0 14px"></p>
+
+    <div class="tablewrap" id="sCfBody"></div>
+    <div id="sCfWarn"></div>
+
+    <div class="dlg-act">
+      <button type="button" class="btn btn-ghost" id="sCfCancel">กลับไปแก้</button>
+      <button type="button" class="btn btn-main" id="sCfGo" style="margin:0;width:auto">ยืนยัน</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="sRsDlg" class="dlg">
   <form method="dialog" class="dlg-in">
     <h2 class="display">ล้างข้อมูลทดสอบ</h2>
