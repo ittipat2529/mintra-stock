@@ -10,6 +10,19 @@
       "active": 1,
       "createdAt": "2026-09-16T08:50:27.888Z",
       "updatedAt": "2026-09-16T08:50:40.636Z",
+      "uncostedReceives": 1,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0033",
+      "name": "ตะขอแขวน",
+      "unit": "ชิ้น",
+      "category": "ของแถม",
+      "reorderPoint": 0,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T07:51:20.912Z",
+      "updatedAt": "",
       "uncostedReceives": 0,
       "costedReceives": 0
     },
@@ -19,12 +32,12 @@
       "unit": "ชิ้น",
       "category": "ของแถม",
       "reorderPoint": 20,
-      "costAvg": 69.56,
+      "costAvg": 56,
       "active": 1,
       "createdAt": "2026-09-16T08:32:57.674Z",
       "updatedAt": "2026-09-16T09:12:32.247Z",
-      "uncostedReceives": 3,
-      "costedReceives": 0
+      "uncostedReceives": 5,
+      "costedReceives": 1
     },
     {
       "sku": "MT-0006",
@@ -36,7 +49,7 @@
       "active": 1,
       "createdAt": "2026-09-16T08:33:34.979Z",
       "updatedAt": "2026-09-16T08:33:44.378Z",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -92,6 +105,32 @@
       "costedReceives": 0
     },
     {
+      "sku": "MT-0016",
+      "name": "บับเบิ้ล - เล็ก",
+      "unit": "ม้วน",
+      "category": "อุปกรณ์",
+      "reorderPoint": 5,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T04:58:43.488Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0017",
+      "name": "บับเบิ้ล - ใหญ่",
+      "unit": "ม้วน",
+      "category": "อุปกรณ์",
+      "reorderPoint": 5,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T04:59:05.363Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
       "sku": "MT-0002",
       "name": "ผ้านาโน",
       "unit": "ผืน",
@@ -131,6 +170,84 @@
       "costedReceives": 0
     },
     {
+      "sku": "MT-0027",
+      "name": "ลัง  2B",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 100,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:02:33.220Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0026",
+      "name": "ลัง  B",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 100,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:02:17.740Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0031",
+      "name": "ลัง  ฉ",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 50,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:03:35.367Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0030",
+      "name": "ลัง 2D",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 50,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:03:17.143Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0028",
+      "name": "ลัง C+8",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 100,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:02:47.682Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0029",
+      "name": "ลัง D",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 50,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:03:01.726Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
       "sku": "MT-0008",
       "name": "วิตามินนก",
       "unit": "ขวด",
@@ -157,6 +274,45 @@
       "costedReceives": 0
     },
     {
+      "sku": "MT-0024",
+      "name": "เทป - น้ำตาล",
+      "unit": "ม้วน",
+      "category": "อุปกรณ์",
+      "reorderPoint": 10,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:01:35.372Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0023",
+      "name": "เทป - ระวังแตก",
+      "unit": "ม้วน",
+      "category": "อุปกรณ์",
+      "reorderPoint": 10,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:01:16.137Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0025",
+      "name": "เทป - ใส",
+      "unit": "ม้วน",
+      "category": "อุปกรณ์",
+      "reorderPoint": 10,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:01:48.473Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
       "sku": "MT-0010",
       "name": "เสื้อเกษตร",
       "unit": "ตัว",
@@ -166,6 +322,71 @@
       "active": 1,
       "createdAt": "2026-09-16T08:48:11.827Z",
       "updatedAt": "2026-09-16T09:14:34.602Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0018",
+      "name": "แกลลอน 1L.",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 0,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T04:59:24.586Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0019",
+      "name": "แกลลอน 2L.",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 50,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T04:59:45.542Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0020",
+      "name": "แกลลอน 3L.",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 50,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T04:59:59.935Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0022",
+      "name": "แกลลอน 500ML.",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 20,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:00:29.513Z",
+      "updatedAt": "",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0021",
+      "name": "แกลลอน 5L.",
+      "unit": "ใบ",
+      "category": "อุปกรณ์",
+      "reorderPoint": 50,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-09-18T05:00:15.758Z",
+      "updatedAt": "",
       "uncostedReceives": 0,
       "costedReceives": 0
     },
@@ -194,9 +415,28 @@
       "updatedAt": "2026-09-16T09:14:50.175Z",
       "uncostedReceives": 0,
       "costedReceives": 0
+    },
+    {
+      "sku": "MT-0032",
+      "name": "แผ่นเช็ดตาแมว",
+      "unit": "ชิ้น",
+      "category": "ของแถม",
+      "reorderPoint": 0,
+      "costAvg": 35,
+      "active": 1,
+      "createdAt": "2026-09-18T07:42:29.878Z",
+      "updatedAt": "2026-09-18T07:51:07.075Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
     }
   ],
   "barcodes": [
+    {
+      "barcode": "20000/0S0&15",
+      "sku": "MT-0001",
+      "packQty": 1,
+      "label": ""
+    },
     {
       "barcode": "2000000000015",
       "sku": "MT-0001",
@@ -306,6 +546,132 @@
       "label": ""
     },
     {
+      "barcode": "2000000000190",
+      "sku": "MT-0016",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000206",
+      "sku": "MT-0017",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000213",
+      "sku": "MT-0018",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000220",
+      "sku": "MT-0019",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000237",
+      "sku": "MT-0020",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000244",
+      "sku": "MT-0021",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000251",
+      "sku": "MT-0022",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000268",
+      "sku": "MT-0023",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000275",
+      "sku": "MT-0024",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000282",
+      "sku": "MT-0025",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000299",
+      "sku": "MT-0026",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000305",
+      "sku": "MT-0027",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000312",
+      "sku": "MT-0028",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000329",
+      "sku": "MT-0029",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000336",
+      "sku": "MT-0030",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000343",
+      "sku": "MT-0031",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000350",
+      "sku": "MT-0032",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000367",
+      "sku": "MT-0033",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "20000000015",
+      "sku": "MT-0001",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000077",
+      "sku": "MT-0007",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000S&0000(6&",
+      "sku": "MT-0006",
+      "packQty": 100,
+      "label": ""
+    },
+    {
       "barcode": "600000000M(53",
       "sku": "MT-0005",
       "packQty": 1,
@@ -328,7 +694,13 @@
       "sku": "MT-0004",
       "packQty": 561,
       "label": ""
+    },
+    {
+      "barcode": "MT-0007",
+      "sku": "MT-0007",
+      "packQty": 1,
+      "label": ""
     }
   ],
-  "updatedAt": "2026-09-17"
+  "updatedAt": "2026-09-18"
 }
