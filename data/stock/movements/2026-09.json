@@ -1350,6 +1350,21 @@
       "costPerUnit": null,
       "userId": "savarack",
       "device": "มือถือ"
+    },
+    {
+      "id": "mv_mu7u5bksdjltwp",
+      "ts": "2026-09-19T03:36:20.188Z",
+      "sku": "MT-0002",
+      "locationId": "main",
+      "qty": 20,
+      "type": "receive",
+      "reason": "",
+      "note": "",
+      "refType": "bill",
+      "refId": "",
+      "costPerUnit": null,
+      "userId": "waran",
+      "device": ""
     }
   ]
 }
