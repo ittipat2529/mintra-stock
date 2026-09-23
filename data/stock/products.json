@@ -36,7 +36,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:00.839Z",
       "updatedAt": "",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -66,6 +66,58 @@
       "costedReceives": 0
     },
     {
+      "sku": "MT-0027",
+      "name": "DC 1L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 36,
+      "active": 1,
+      "createdAt": "2026-09-18T05:02:33.220Z",
+      "updatedAt": "2026-09-23T06:29:42.193Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0026",
+      "name": "DC 2L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 52,
+      "active": 1,
+      "createdAt": "2026-09-18T05:02:17.740Z",
+      "updatedAt": "2026-09-23T06:29:48.933Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0031",
+      "name": "DC 3L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 69,
+      "active": 1,
+      "createdAt": "2026-09-18T05:03:35.367Z",
+      "updatedAt": "2026-09-23T06:30:06.614Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0030",
+      "name": "DC 5L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 87,
+      "active": 1,
+      "createdAt": "2026-09-18T05:03:17.143Z",
+      "updatedAt": "2026-09-23T06:30:23.122Z",
+      "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
       "sku": "MT-0052",
       "name": "DM  1L",
       "unit": "แกลลอน",
@@ -75,7 +127,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:10.436Z",
       "updatedAt": "",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -88,7 +140,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:41.489Z",
       "updatedAt": "",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -101,7 +153,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:28.536Z",
       "updatedAt": "2026-09-22T09:51:21.942Z",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -140,7 +192,7 @@
       "active": 1,
       "createdAt": "2026-09-18T05:01:35.372Z",
       "updatedAt": "2026-09-22T09:51:58.044Z",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -153,7 +205,7 @@
       "active": 1,
       "createdAt": "2026-09-18T05:01:48.473Z",
       "updatedAt": "2026-09-22T09:52:10.094Z",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -192,6 +244,58 @@
       "active": 1,
       "createdAt": "2026-09-18T05:01:16.137Z",
       "updatedAt": "2026-09-22T09:52:38.339Z",
+      "uncostedReceives": 1,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0028",
+      "name": "PN 1L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 61,
+      "active": 1,
+      "createdAt": "2026-09-18T05:02:47.682Z",
+      "updatedAt": "2026-09-23T10:44:32.924Z",
+      "uncostedReceives": 0,
+      "costedReceives": 1
+    },
+    {
+      "sku": "MT-0056",
+      "name": "PN 2L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 100,
+      "active": 1,
+      "createdAt": "2026-09-23T10:43:30.028Z",
+      "updatedAt": "2026-09-23T10:44:42.496Z",
+      "uncostedReceives": 1,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0057",
+      "name": "PN 3L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 141,
+      "active": 1,
+      "createdAt": "2026-09-23T10:43:48.066Z",
+      "updatedAt": "2026-09-23T10:44:54.225Z",
+      "uncostedReceives": 1,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0058",
+      "name": "PN 5L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 207,
+      "active": 1,
+      "createdAt": "2026-09-23T10:44:00.697Z",
+      "updatedAt": "",
       "uncostedReceives": 0,
       "costedReceives": 0
     },
@@ -205,7 +309,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:28.430Z",
       "updatedAt": "2026-09-22T09:52:47.218Z",
-      "uncostedReceives": 1,
+      "uncostedReceives": 2,
       "costedReceives": 0
     },
     {
@@ -218,7 +322,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:54.412Z",
       "updatedAt": "2026-09-22T09:52:59.615Z",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -231,7 +335,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:12.741Z",
       "updatedAt": "2026-09-22T09:53:07.940Z",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -257,7 +361,20 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:41.371Z",
       "updatedAt": "2026-09-22T09:53:28.623Z",
-      "uncostedReceives": 1,
+      "uncostedReceives": 2,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0029",
+      "name": "ST 1L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 36,
+      "active": 1,
+      "createdAt": "2026-09-18T05:03:01.726Z",
+      "updatedAt": "2026-09-23T10:45:29.884Z",
+      "uncostedReceives": 0,
       "costedReceives": 0
     },
     {
@@ -270,7 +387,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:55.986Z",
       "updatedAt": "",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -283,7 +400,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:43:10.106Z",
       "updatedAt": "",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -296,7 +413,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:43:24.929Z",
       "updatedAt": "",
-      "uncostedReceives": 0,
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -478,7 +595,7 @@
       "active": 1,
       "createdAt": "2026-09-15T09:36:53.630Z",
       "updatedAt": "2026-09-16T09:33:39.312Z",
-      "uncostedReceives": 3,
+      "uncostedReceives": 4,
       "costedReceives": 1
     },
     {
@@ -491,84 +608,6 @@
       "active": 1,
       "createdAt": "2026-09-16T08:50:04.973Z",
       "updatedAt": "2026-09-16T08:51:16.386Z",
-      "uncostedReceives": 0,
-      "costedReceives": 0
-    },
-    {
-      "sku": "MT-0027",
-      "name": "ลัง  2B",
-      "unit": "ใบ",
-      "category": "อุปกรณ์",
-      "reorderPoint": 100,
-      "costAvg": 0,
-      "active": 1,
-      "createdAt": "2026-09-18T05:02:33.220Z",
-      "updatedAt": "",
-      "uncostedReceives": 0,
-      "costedReceives": 0
-    },
-    {
-      "sku": "MT-0026",
-      "name": "ลัง  B",
-      "unit": "ใบ",
-      "category": "อุปกรณ์",
-      "reorderPoint": 100,
-      "costAvg": 0,
-      "active": 1,
-      "createdAt": "2026-09-18T05:02:17.740Z",
-      "updatedAt": "",
-      "uncostedReceives": 0,
-      "costedReceives": 0
-    },
-    {
-      "sku": "MT-0031",
-      "name": "ลัง  ฉ",
-      "unit": "ใบ",
-      "category": "อุปกรณ์",
-      "reorderPoint": 50,
-      "costAvg": 0,
-      "active": 1,
-      "createdAt": "2026-09-18T05:03:35.367Z",
-      "updatedAt": "",
-      "uncostedReceives": 0,
-      "costedReceives": 0
-    },
-    {
-      "sku": "MT-0030",
-      "name": "ลัง 2D",
-      "unit": "ใบ",
-      "category": "อุปกรณ์",
-      "reorderPoint": 50,
-      "costAvg": 0,
-      "active": 1,
-      "createdAt": "2026-09-18T05:03:17.143Z",
-      "updatedAt": "",
-      "uncostedReceives": 0,
-      "costedReceives": 0
-    },
-    {
-      "sku": "MT-0028",
-      "name": "ลัง C+8",
-      "unit": "ใบ",
-      "category": "อุปกรณ์",
-      "reorderPoint": 100,
-      "costAvg": 0,
-      "active": 1,
-      "createdAt": "2026-09-18T05:02:47.682Z",
-      "updatedAt": "",
-      "uncostedReceives": 0,
-      "costedReceives": 0
-    },
-    {
-      "sku": "MT-0029",
-      "name": "ลัง D",
-      "unit": "ใบ",
-      "category": "อุปกรณ์",
-      "reorderPoint": 50,
-      "costAvg": 0,
-      "active": 1,
-      "createdAt": "2026-09-18T05:03:01.726Z",
-      "updatedAt": "",
       "uncostedReceives": 0,
       "costedReceives": 0
     },
@@ -1072,9 +1111,33 @@
       "label": ""
     },
     {
+      "barcode": "2000000000596",
+      "sku": "MT-0056",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000602",
+      "sku": "MT-0057",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "2000000000619",
+      "sku": "MT-0058",
+      "packQty": 1,
+      "label": ""
+    },
+    {
       "barcode": "20000000015",
       "sku": "MT-0001",
       "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "200000000M571",
+      "sku": "MT-0054",
+      "packQty": 14,
       "label": ""
     },
     {
@@ -1084,9 +1147,27 @@
       "label": ""
     },
     {
+      "barcode": "20000000M&5!2",
+      "sku": "MT-0054",
+      "packQty": 1,
+      "label": ""
+    },
+    {
       "barcode": "2000S&0000(6&",
       "sku": "MT-0006",
       "packQty": 100,
+      "label": ""
+    },
+    {
+      "barcode": "20M00MM0002V2",
+      "sku": "MT-0025",
+      "packQty": 1,
+      "label": ""
+    },
+    {
+      "barcode": "20MM0000M03V1",
+      "sku": "MT-0035",
+      "packQty": 18,
       "label": ""
     },
     {
@@ -1120,5 +1201,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-09-22"
+  "updatedAt": "2026-09-23"
 }
