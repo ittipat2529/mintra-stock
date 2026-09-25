@@ -1,0 +1,283 @@
+{
+  "date": "2026-09-25",
+  "version": 458,
+  "balance": [
+    {
+      "sku": "MT-0001",
+      "locationId": "main",
+      "onHand": 647,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0002",
+      "locationId": "main",
+      "onHand": 335,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0003",
+      "locationId": "main",
+      "onHand": 586,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0004",
+      "locationId": "main",
+      "onHand": 526,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0005",
+      "locationId": "main",
+      "onHand": 92,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0006",
+      "locationId": "main",
+      "onHand": 130,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0007",
+      "locationId": "main",
+      "onHand": 61,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0008",
+      "locationId": "main",
+      "onHand": 28,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0009",
+      "locationId": "main",
+      "onHand": 100,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0010",
+      "locationId": "main",
+      "onHand": 65,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0011",
+      "locationId": "main",
+      "onHand": 77,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0012",
+      "locationId": "main",
+      "onHand": 15,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0013",
+      "locationId": "main",
+      "onHand": 7,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0014",
+      "locationId": "main",
+      "onHand": 16,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0015",
+      "locationId": "main",
+      "onHand": 7,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0016",
+      "locationId": "main",
+      "onHand": 9,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0017",
+      "locationId": "main",
+      "onHand": 6,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0018",
+      "locationId": "main",
+      "onHand": 2250,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0019",
+      "locationId": "main",
+      "onHand": 140,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0020",
+      "locationId": "main",
+      "onHand": 166,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0021",
+      "locationId": "main",
+      "onHand": 247,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0022",
+      "locationId": "main",
+      "onHand": 27,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0024",
+      "locationId": "main",
+      "onHand": 6,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0025",
+      "locationId": "main",
+      "onHand": 1,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0028",
+      "locationId": "main",
+      "onHand": 18,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0032",
+      "locationId": "main",
+      "onHand": 1,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0033",
+      "locationId": "main",
+      "onHand": 3,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0035",
+      "locationId": "main",
+      "onHand": 45,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0036",
+      "locationId": "main",
+      "onHand": 6,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0037",
+      "locationId": "main",
+      "onHand": 38,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0038",
+      "locationId": "main",
+      "onHand": 3,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0040",
+      "locationId": "main",
+      "onHand": 23,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0041",
+      "locationId": "main",
+      "onHand": 6,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0042",
+      "locationId": "main",
+      "onHand": 8,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0045",
+      "locationId": "main",
+      "onHand": 7,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0046",
+      "locationId": "main",
+      "onHand": 7,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0047",
+      "locationId": "main",
+      "onHand": 9,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0048",
+      "locationId": "main",
+      "onHand": 2,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0050",
+      "locationId": "main",
+      "onHand": 10,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0052",
+      "locationId": "main",
+      "onHand": 14,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0053",
+      "locationId": "main",
+      "onHand": 4,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0054",
+      "locationId": "main",
+      "onHand": 8,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0055",
+      "locationId": "main",
+      "onHand": 4,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0056",
+      "locationId": "main",
+      "onHand": 1,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0057",
+      "locationId": "main",
+      "onHand": 1,
+      "reserved": 0
+    },
+    {
+      "sku": "MT-0059",
+      "locationId": "main",
+      "onHand": 10,
+      "reserved": 0
+    }
+  ],
+  "reservations": []
+}
