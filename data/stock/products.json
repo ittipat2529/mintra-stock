@@ -10,7 +10,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:41:22.728Z",
       "updatedAt": "",
-      "uncostedReceives": 7,
+      "uncostedReceives": 8,
       "costedReceives": 0
     },
     {
@@ -23,7 +23,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:41:45.021Z",
       "updatedAt": "",
-      "uncostedReceives": 3,
+      "uncostedReceives": 4,
       "costedReceives": 0
     },
     {
@@ -36,7 +36,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:00.839Z",
       "updatedAt": "",
-      "uncostedReceives": 8,
+      "uncostedReceives": 9,
       "costedReceives": 0
     },
     {
@@ -49,7 +49,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:41:01.855Z",
       "updatedAt": "",
-      "uncostedReceives": 1,
+      "uncostedReceives": 2,
       "costedReceives": 0
     },
     {
@@ -62,7 +62,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:12.589Z",
       "updatedAt": "",
-      "uncostedReceives": 13,
+      "uncostedReceives": 14,
       "costedReceives": 0
     },
     {
@@ -127,7 +127,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:10.436Z",
       "updatedAt": "",
-      "uncostedReceives": 7,
+      "uncostedReceives": 8,
       "costedReceives": 0
     },
     {
@@ -348,7 +348,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:01.362Z",
       "updatedAt": "2026-09-22T09:53:17.243Z",
-      "uncostedReceives": 1,
+      "uncostedReceives": 2,
       "costedReceives": 0
     },
     {
@@ -556,7 +556,7 @@
       "active": 1,
       "createdAt": "2026-09-18T04:58:43.488Z",
       "updatedAt": "",
-      "uncostedReceives": 1,
+      "uncostedReceives": 2,
       "costedReceives": 0
     },
     {
@@ -582,7 +582,7 @@
       "active": 1,
       "createdAt": "2026-09-16T02:21:22.120Z",
       "updatedAt": "2026-09-16T09:13:51.619Z",
-      "uncostedReceives": 4,
+      "uncostedReceives": 5,
       "costedReceives": 3
     },
     {
@@ -769,6 +769,12 @@
     }
   ],
   "barcodes": [
+    {
+      "barcode": "00001885",
+      "sku": "MT-0034",
+      "packQty": 1,
+      "label": ""
+    },
     {
       "barcode": "200&0&M000114",
       "sku": "MT-0011",
@@ -1250,5 +1256,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-10-06"
+  "updatedAt": "2026-10-08"
 }
