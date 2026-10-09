@@ -10,7 +10,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:41:22.728Z",
       "updatedAt": "",
-      "uncostedReceives": 8,
+      "uncostedReceives": 10,
       "costedReceives": 0
     },
     {
@@ -23,7 +23,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:41:45.021Z",
       "updatedAt": "",
-      "uncostedReceives": 4,
+      "uncostedReceives": 5,
       "costedReceives": 0
     },
     {
@@ -36,7 +36,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:00.839Z",
       "updatedAt": "",
-      "uncostedReceives": 9,
+      "uncostedReceives": 10,
       "costedReceives": 0
     },
     {
@@ -127,7 +127,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:10.436Z",
       "updatedAt": "",
-      "uncostedReceives": 8,
+      "uncostedReceives": 9,
       "costedReceives": 0
     },
     {
@@ -179,7 +179,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:54.087Z",
       "updatedAt": "2026-09-22T09:51:45.012Z",
-      "uncostedReceives": 5,
+      "uncostedReceives": 6,
       "costedReceives": 0
     },
     {
@@ -309,7 +309,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:28.430Z",
       "updatedAt": "2026-09-22T09:52:47.218Z",
-      "uncostedReceives": 10,
+      "uncostedReceives": 12,
       "costedReceives": 0
     },
     {
@@ -322,7 +322,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:54.412Z",
       "updatedAt": "2026-09-22T09:52:59.615Z",
-      "uncostedReceives": 3,
+      "uncostedReceives": 4,
       "costedReceives": 0
     },
     {
@@ -335,7 +335,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:12.741Z",
       "updatedAt": "2026-09-22T09:53:07.940Z",
-      "uncostedReceives": 3,
+      "uncostedReceives": 5,
       "costedReceives": 0
     },
     {
@@ -348,7 +348,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:01.362Z",
       "updatedAt": "2026-09-22T09:53:17.243Z",
-      "uncostedReceives": 2,
+      "uncostedReceives": 3,
       "costedReceives": 0
     },
     {
@@ -361,7 +361,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:41.371Z",
       "updatedAt": "2026-09-22T09:53:28.623Z",
-      "uncostedReceives": 12,
+      "uncostedReceives": 14,
       "costedReceives": 0
     },
     {
@@ -439,7 +439,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:43:34.265Z",
       "updatedAt": "2026-09-22T09:54:18.836Z",
-      "uncostedReceives": 5,
+      "uncostedReceives": 7,
       "costedReceives": 0
     },
     {
@@ -1190,6 +1190,12 @@
       "label": ""
     },
     {
+      "barcode": "2000000M00077",
+      "sku": "MT-0007",
+      "packQty": 1,
+      "label": ""
+    },
+    {
       "barcode": "2000S&0000(6&",
       "sku": "MT-0006",
       "packQty": 100,
@@ -1256,5 +1262,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-10-08"
+  "updatedAt": "2026-10-09"
 }
