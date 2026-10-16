@@ -62,7 +62,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:12.589Z",
       "updatedAt": "",
-      "uncostedReceives": 20,
+      "uncostedReceives": 21,
       "costedReceives": 0
     },
     {
@@ -127,7 +127,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:10.436Z",
       "updatedAt": "",
-      "uncostedReceives": 13,
+      "uncostedReceives": 14,
       "costedReceives": 0
     },
     {
@@ -179,7 +179,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:54.087Z",
       "updatedAt": "2026-09-22T09:51:45.012Z",
-      "uncostedReceives": 9,
+      "uncostedReceives": 10,
       "costedReceives": 0
     },
     {
@@ -309,7 +309,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:28.430Z",
       "updatedAt": "2026-09-22T09:52:47.218Z",
-      "uncostedReceives": 18,
+      "uncostedReceives": 19,
       "costedReceives": 0
     },
     {
@@ -322,7 +322,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:54.412Z",
       "updatedAt": "2026-09-22T09:52:59.615Z",
-      "uncostedReceives": 7,
+      "uncostedReceives": 8,
       "costedReceives": 0
     },
     {
@@ -335,7 +335,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:12.741Z",
       "updatedAt": "2026-09-22T09:53:07.940Z",
-      "uncostedReceives": 11,
+      "uncostedReceives": 12,
       "costedReceives": 0
     },
     {
@@ -348,7 +348,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:01.362Z",
       "updatedAt": "2026-09-22T09:53:17.243Z",
-      "uncostedReceives": 4,
+      "uncostedReceives": 5,
       "costedReceives": 0
     },
     {
@@ -361,7 +361,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:41.371Z",
       "updatedAt": "2026-09-22T09:53:28.623Z",
-      "uncostedReceives": 18,
+      "uncostedReceives": 19,
       "costedReceives": 0
     },
     {
@@ -439,7 +439,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:43:34.265Z",
       "updatedAt": "2026-09-22T09:54:18.836Z",
-      "uncostedReceives": 11,
+      "uncostedReceives": 12,
       "costedReceives": 0
     },
     {
@@ -1262,5 +1262,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-10-15"
+  "updatedAt": "2026-10-16"
 }
