@@ -62,7 +62,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:12.589Z",
       "updatedAt": "",
-      "uncostedReceives": 24,
+      "uncostedReceives": 25,
       "costedReceives": 0
     },
     {
@@ -179,7 +179,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:54.087Z",
       "updatedAt": "2026-09-22T09:51:45.012Z",
-      "uncostedReceives": 12,
+      "uncostedReceives": 13,
       "costedReceives": 0
     },
     {
@@ -218,7 +218,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:44:04.404Z",
       "updatedAt": "2026-09-22T09:52:18.658Z",
-      "uncostedReceives": 11,
+      "uncostedReceives": 12,
       "costedReceives": 0
     },
     {
@@ -309,7 +309,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:28.430Z",
       "updatedAt": "2026-09-22T09:52:47.218Z",
-      "uncostedReceives": 22,
+      "uncostedReceives": 23,
       "costedReceives": 0
     },
     {
@@ -1262,5 +1262,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-10-22"
+  "updatedAt": "2026-10-23"
 }
