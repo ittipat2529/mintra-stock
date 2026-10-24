@@ -62,7 +62,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:12.589Z",
       "updatedAt": "",
-      "uncostedReceives": 25,
+      "uncostedReceives": 26,
       "costedReceives": 0
     },
     {
@@ -140,7 +140,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:41.489Z",
       "updatedAt": "",
-      "uncostedReceives": 9,
+      "uncostedReceives": 11,
       "costedReceives": 0
     },
     {
@@ -179,7 +179,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:54.087Z",
       "updatedAt": "2026-09-22T09:51:45.012Z",
-      "uncostedReceives": 13,
+      "uncostedReceives": 14,
       "costedReceives": 0
     },
     {
@@ -218,7 +218,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:44:04.404Z",
       "updatedAt": "2026-09-22T09:52:18.658Z",
-      "uncostedReceives": 12,
+      "uncostedReceives": 14,
       "costedReceives": 0
     },
     {
@@ -309,7 +309,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:28.430Z",
       "updatedAt": "2026-09-22T09:52:47.218Z",
-      "uncostedReceives": 23,
+      "uncostedReceives": 25,
       "costedReceives": 0
     },
     {
@@ -322,7 +322,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:54.412Z",
       "updatedAt": "2026-09-22T09:52:59.615Z",
-      "uncostedReceives": 13,
+      "uncostedReceives": 15,
       "costedReceives": 0
     },
     {
@@ -335,7 +335,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:12.741Z",
       "updatedAt": "2026-09-22T09:53:07.940Z",
-      "uncostedReceives": 16,
+      "uncostedReceives": 18,
       "costedReceives": 0
     },
     {
@@ -361,7 +361,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:41.371Z",
       "updatedAt": "2026-09-22T09:53:28.623Z",
-      "uncostedReceives": 21,
+      "uncostedReceives": 23,
       "costedReceives": 0
     },
     {
@@ -1262,5 +1262,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-10-23"
+  "updatedAt": "2026-10-24"
 }
