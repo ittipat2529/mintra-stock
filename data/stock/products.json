@@ -49,7 +49,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:41:01.855Z",
       "updatedAt": "",
-      "uncostedReceives": 5,
+      "uncostedReceives": 6,
       "costedReceives": 0
     },
     {
@@ -179,7 +179,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:54.087Z",
       "updatedAt": "2026-09-22T09:51:45.012Z",
-      "uncostedReceives": 18,
+      "uncostedReceives": 19,
       "costedReceives": 0
     },
     {
@@ -309,7 +309,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:28.430Z",
       "updatedAt": "2026-09-22T09:52:47.218Z",
-      "uncostedReceives": 32,
+      "uncostedReceives": 33,
       "costedReceives": 0
     },
     {
@@ -322,7 +322,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:54.412Z",
       "updatedAt": "2026-09-22T09:52:59.615Z",
-      "uncostedReceives": 18,
+      "uncostedReceives": 19,
       "costedReceives": 0
     },
     {
@@ -361,7 +361,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:38:41.371Z",
       "updatedAt": "2026-09-22T09:53:28.623Z",
-      "uncostedReceives": 28,
+      "uncostedReceives": 29,
       "costedReceives": 0
     },
     {
@@ -375,6 +375,19 @@
       "createdAt": "2026-09-18T05:03:01.726Z",
       "updatedAt": "2026-09-23T10:45:29.884Z",
       "uncostedReceives": 0,
+      "costedReceives": 0
+    },
+    {
+      "sku": "MT-0060",
+      "name": "ST-5L",
+      "unit": "แกลลอน",
+      "category": "น้ำยา",
+      "reorderPoint": 0,
+      "costAvg": 0,
+      "active": 1,
+      "createdAt": "2026-11-04T09:10:25.920Z",
+      "updatedAt": "",
+      "uncostedReceives": 1,
       "costedReceives": 0
     },
     {
@@ -1160,6 +1173,12 @@
       "label": ""
     },
     {
+      "barcode": "2000000000633",
+      "sku": "MT-0060",
+      "packQty": 1,
+      "label": ""
+    },
+    {
       "barcode": "20000000015",
       "sku": "MT-0001",
       "packQty": 1,
@@ -1262,5 +1281,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-11-03"
+  "updatedAt": "2026-11-04"
 }
