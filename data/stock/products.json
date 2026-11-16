@@ -62,7 +62,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:12.589Z",
       "updatedAt": "",
-      "uncostedReceives": 44,
+      "uncostedReceives": 45,
       "costedReceives": 0
     },
     {
@@ -127,7 +127,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:10.436Z",
       "updatedAt": "",
-      "uncostedReceives": 27,
+      "uncostedReceives": 28,
       "costedReceives": 0
     },
     {
@@ -218,7 +218,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:44:04.404Z",
       "updatedAt": "2026-09-22T09:52:18.658Z",
-      "uncostedReceives": 16,
+      "uncostedReceives": 17,
       "costedReceives": 0
     },
     {
@@ -1281,5 +1281,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-11-15"
+  "updatedAt": "2026-11-16"
 }
