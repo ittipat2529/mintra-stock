@@ -69,6 +69,16 @@
       "iterations": 20000,
       "createdAt": "2026-09-16T09:44:44.901Z",
       "mustChangePassword": false
+    },
+    {
+      "username": "namtarn",
+      "name": "กุญลนัน  ยิ้มเนตร",
+      "role": "sales",
+      "salt": "MTcgV1LDbWRG-X1ybs2qfg",
+      "hash": "W_BEw3fwvCuTE44saWYgciQ3MWPAXNugg1MOOetiOvk",
+      "iterations": 20000,
+      "createdAt": "2026-11-21T09:14:27.979Z",
+      "mustChangePassword": true
     }
   ]
 }
