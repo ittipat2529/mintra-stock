@@ -74,8 +74,8 @@
       "username": "namtarn",
       "name": "กุญลนัน  ยิ้มเนตร",
       "role": "sales",
-      "salt": "oE4oCRBxC0hPsK_HflVZNQ",
-      "hash": "o2pW2BDI5s-rVtPDgEqPhzNvfJ7zs_va-9nOdi7lWDc",
+      "salt": "Qtwb6g8tpO8gM65aS_IDUQ",
+      "hash": "QzWQmHrrMVZuE6QwZ09FO4-vUjd8BsRsjXnei8bUCsg",
       "iterations": 20000,
       "createdAt": "2026-11-21T09:14:27.979Z",
       "mustChangePassword": false
