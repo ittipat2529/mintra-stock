@@ -23,7 +23,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:41:45.021Z",
       "updatedAt": "",
-      "uncostedReceives": 19,
+      "uncostedReceives": 20,
       "costedReceives": 0
     },
     {
@@ -36,7 +36,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:00.839Z",
       "updatedAt": "",
-      "uncostedReceives": 29,
+      "uncostedReceives": 30,
       "costedReceives": 0
     },
     {
@@ -62,7 +62,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:12.589Z",
       "updatedAt": "",
-      "uncostedReceives": 47,
+      "uncostedReceives": 48,
       "costedReceives": 0
     },
     {
@@ -127,7 +127,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:10.436Z",
       "updatedAt": "",
-      "uncostedReceives": 33,
+      "uncostedReceives": 34,
       "costedReceives": 0
     },
     {
@@ -140,7 +140,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:41.489Z",
       "updatedAt": "",
-      "uncostedReceives": 30,
+      "uncostedReceives": 31,
       "costedReceives": 0
     },
     {
@@ -166,7 +166,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:47:43.860Z",
       "updatedAt": "2026-09-22T09:51:35.724Z",
-      "uncostedReceives": 3,
+      "uncostedReceives": 4,
       "costedReceives": 0
     },
     {
@@ -179,7 +179,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:48:54.087Z",
       "updatedAt": "2026-09-22T09:51:45.012Z",
-      "uncostedReceives": 31,
+      "uncostedReceives": 32,
       "costedReceives": 0
     },
     {
@@ -309,7 +309,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:37:28.430Z",
       "updatedAt": "2026-09-22T09:52:47.218Z",
-      "uncostedReceives": 48,
+      "uncostedReceives": 49,
       "costedReceives": 0
     },
     {
@@ -400,7 +400,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:42:55.986Z",
       "updatedAt": "",
-      "uncostedReceives": 16,
+      "uncostedReceives": 17,
       "costedReceives": 0
     },
     {
@@ -426,7 +426,7 @@
       "active": 1,
       "createdAt": "2026-09-22T09:43:24.929Z",
       "updatedAt": "",
-      "uncostedReceives": 21,
+      "uncostedReceives": 22,
       "costedReceives": 0
     },
     {
@@ -699,7 +699,7 @@
       "active": 1,
       "createdAt": "2026-09-18T04:59:59.935Z",
       "updatedAt": "",
-      "uncostedReceives": 3,
+      "uncostedReceives": 4,
       "costedReceives": 0
     },
     {
@@ -1281,5 +1281,5 @@
       "label": ""
     }
   ],
-  "updatedAt": "2026-11-25"
+  "updatedAt": "2026-11-26"
 }
